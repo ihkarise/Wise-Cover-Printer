@@ -697,7 +697,9 @@ function buildCover(P,it,headTxt,style){
   const nb=(form.size==='large'?0.36:0.32), db=(form.size==='large'?0.28:0.26);
   var g=settings.typo.global||{};var CF=g.font||"'Inter',sans-serif",CI=settings.inkColor||'#1E293B',CA=settings.accentColor||'#244A9B';
   var ti=effTypo('instr');var ibase=BASEFS[form.size]*ti.size;
-  const noTxt=P.pno||('No. '+activeItems().length);
+  const startNo = parseInt(String(P.pno || '').replace(/\D/g, ''), 10) || 1;
+  const currentNo = startNo + (it.n - 1);
+  const noTxt = 'No.' + currentNo;
   var logoHtml='';
   if(!settings.logo||settings.logo.show!==false){var src=(settings.logo&&settings.logo.dataUrl)||(WH_LOGO_OK?WH_LOGO:'');logoHtml=src?'<img class="wh-logo" src="'+src+'" style="height:.9cm">':'<div class="logo-ph">LOGO</div>';}
   const design='<div class="layer design"><div class="watermark"></div>'+
