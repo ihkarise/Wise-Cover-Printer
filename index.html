@@ -112,16 +112,6 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
 .drow:hover{border-color:var(--blue);background:var(--blue-050)}.drow:active{transform:scale(.99)}
 .drow b{display:block;font-size:12.5px;color:var(--blue)}
 .drow span{display:block;font-size:11px;color:var(--text2);margin-top:1px;line-height:1.35}
-.drow2{display:flex;align-items:stretch;gap:6px;margin-bottom:6px}
-.drow2 .dins{flex:1;text-align:left;border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 10px;transition:border-color .15s var(--ease),background .15s var(--ease)}
-.drow2 .dins:hover{border-color:var(--blue);background:var(--blue-050)}
-.drow2 .dins b{display:block;font-size:12.5px;color:var(--blue)}
-.drow2 .dins span{display:block;font-size:11px;color:var(--text2);margin-top:1px;line-height:1.3}
-.drow2 .dax{display:flex;flex-direction:column;gap:4px}
-.drow2 .dax button{border:1px solid var(--line);background:#fff;border-radius:7px;width:30px;flex:1;font-size:12px;color:var(--text2);transition:all .15s var(--ease)}
-.drow2 .dax button:hover{border-color:var(--blue);color:var(--blue)}
-.btn.outline.act{border-color:var(--blue);background:var(--blue-050)}
-.wh-logo{object-fit:contain}
 
 /* ===== COVER ===== */
 .cover{position:relative;background:#fff;color:var(--ci,#1E293B);overflow:hidden;font-family:var(--cf,var(--font-ui))}
@@ -178,22 +168,6 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
 <div class="layout">
   <div>
     <div class="card">
-      <div class="card-head"><span class="step">◆</span><h2>Templates</h2><span class="hint">printer / user profiles</span></div>
-      <div class="card-body">
-        <div class="grid c2">
-          <div><label class="f">Saved profile</label><select class="inp" id="tplProfile" onchange="onTplSelect()"></select></div>
-          <div><label class="f">Name</label><input class="inp" id="tplName" placeholder="Front desk · HP"></div>
-        </div>
-        <div style="display:flex;gap:7px;margin-top:10px">
-          <button class="btn primary sm" onclick="saveTemplate()">Save</button>
-          <button class="btn outline sm" onclick="loadTemplate()">Load</button>
-          <button class="btn ghost sm" onclick="deleteTemplate()">Delete</button>
-        </div>
-        <div class="help">A template stores field positions, calibration, fonts, colours, languages and logo — so each printer or staff member loads their own setup. (API keys stay per-device, not saved here.)</div>
-      </div>
-    </div>
-
-    <div class="card">
       <div class="card-head"><span class="step">1</span><h2>Patient &amp; format</h2></div>
       <div class="card-body">
         <div class="grid c3">
@@ -204,10 +178,9 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
           <div><label class="f">Prescription No.</label><input class="inp" id="pno" placeholder="No.6" oninput="refresh()"></div>
           <div><label class="f">Date &amp; time (ref for “tomorrow”)</label><input class="inp" id="dt" oninput="refresh()"></div>
         </div>
-        <label class="f" style="margin-top:13px">Languages on the cover</label>
+        <label class="f" style="margin-top:13px">Languages on the cover (besides English)</label>
         <div class="langpick" id="langpick">
-          <label><input type="checkbox" value="en" onchange="toggleLang()">English</label>
-          <label><input type="checkbox" value="ml" onchange="toggleLang()">Malayalam</label>
+          <label class="on"><input type="checkbox" value="ml" checked onchange="toggleLang()">Malayalam</label>
           <label><input type="checkbox" value="hi" onchange="toggleLang()">Hindi</label>
           <label><input type="checkbox" value="ta" onchange="toggleLang()">Tamil</label>
           <label><input type="checkbox" value="kn" onchange="toggleLang()">Kannada</label>
@@ -215,7 +188,6 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
           <label><input type="checkbox" value="bn" onchange="toggleLang()">Bengali</label>
           <label><input type="checkbox" value="ar" onchange="toggleLang()">Arabic</label>
         </div>
-        <div class="help" style="margin-top:8px">Every language is independent — untick English to print Malayalam (or any language) only.</div>
         <div class="grid c3" style="margin-top:14px">
           <div><label class="f">Envelope size</label>
             <div class="seg" id="segSize"><button data-v="large" class="on" onclick="setSeg('size','large')">Large</button><button data-v="small" onclick="setSeg('size','small')">Small</button></div></div>
@@ -265,71 +237,27 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
     </div>
 
     <div class="card">
-      <div class="card-head"><span class="step">A</span><h2>Cover text</h2><span class="hint">global · per-field</span></div>
+      <div class="card-head"><span class="step">A</span><h2>Cover text</h2><span class="hint">font · size · colour</span></div>
       <div class="card-body">
-        <label class="f">Apply to</label>
-        <select class="inp" id="typoField" onchange="applyTypoUI()">
-          <option value="global">All fields (global)</option>
-          <option value="name">Patient Name</option>
-          <option value="opd">OPD Number</option>
-          <option value="instr">Instructions</option>
-          <option value="no">Prescription No</option>
-          <option value="date">Date &amp; Time</option>
-        </select>
-        <div style="margin-top:12px"><label class="f">Font</label><select class="inp" id="covFont" onchange="onTypoFont()"></select></div>
-        <div class="grid c3" style="margin-top:12px">
-          <div><label class="f">Size %</label><div class="stepper"><button onclick="nudgeTypo('size',-0.05)">−</button><input id="covSize" value="100" onchange="onTypoNum('size')"><button onclick="nudgeTypo('size',0.05)">+</button></div></div>
-          <div><label class="f">Width %</label><div class="stepper"><button onclick="nudgeTypo('sx',-0.05)">−</button><input id="covWidth" value="100" onchange="onTypoNum('sx')"><button onclick="nudgeTypo('sx',0.05)">+</button></div></div>
-          <div><label class="f">Height %</label><div class="stepper"><button onclick="nudgeTypo('sy',-0.05)">−</button><input id="covHeight" value="100" onchange="onTypoNum('sy')"><button onclick="nudgeTypo('sy',0.05)">+</button></div></div>
+        <div class="grid c2">
+          <div><label class="f">Font</label><select class="inp" id="covFont" onchange="onTypo()"></select></div>
+          <div><label class="f">Size (%)</label><div class="stepper"><button onclick="nudgeScale(-0.05)">−</button><input id="covScale" value="100" onchange="onScaleInput()"><button onclick="nudgeScale(0.05)">+</button></div></div>
         </div>
         <div class="grid c2" style="margin-top:12px">
-          <div><label class="f">Text colour</label><input class="inp" type="color" id="covInk" value="#1E293B" onchange="onColors()" style="height:42px;padding:4px"></div>
-          <div><label class="f">Accent (values · regional)</label><input class="inp" type="color" id="covAccent" value="#244A9B" onchange="onColors()" style="height:42px;padding:4px"></div>
+          <div><label class="f">Text colour</label><input class="inp" type="color" id="covInk" value="#1E293B" onchange="onTypo()" style="height:42px;padding:4px"></div>
+          <div><label class="f">Accent (values · regional)</label><input class="inp" type="color" id="covAccent" value="#244A9B" onchange="onTypo()" style="height:42px;padding:4px"></div>
         </div>
-        <div style="display:flex;gap:7px;margin-top:10px">
-          <button class="btn ghost sm" id="typoClearBtn" onclick="clearTypoField()" style="display:none">Clear this field</button>
-          <button class="btn ghost sm" onclick="resetTypo()">↺ Reset all text</button>
-        </div>
-        <div class="help">Pick <b>All fields</b> to style everything, or one field for its own font/size/width/height — e.g. OPD &amp; Name in Times New Roman, Instructions in Poppins. Colours are global.</div>
+        <button class="btn ghost sm" style="margin-top:10px" onclick="resetTypo()">↺ Reset text style</button>
+        <div class="help">Changes the variable text on the cover (English values, dates, instructions). Regional scripts keep their own font for correct rendering.</div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-head"><span class="step">◧</span><h2>Clinic logo</h2><span class="hint">on covers</span></div>
-      <div class="card-body">
-        <div style="display:flex;gap:11px;align-items:center">
-          <div id="logoPrev" style="width:54px;height:54px;border:1px solid var(--line);border-radius:9px;display:grid;place-items:center;overflow:hidden;background:#fff;flex:none"><span style="font-size:10px;color:var(--text2)">none</span></div>
-          <div style="flex:1">
-            <input type="file" id="logoFile" accept="image/*" onchange="logoUpload(this)" style="font-size:12px;width:100%">
-            <div style="display:flex;gap:7px;margin-top:8px">
-              <button class="btn outline sm" id="logoToggle" onclick="toggleLogoShow()">Logo: On</button>
-              <button class="btn ghost sm" onclick="removeLogo()">Remove</button>
-            </div>
-          </div>
-        </div>
-        <div class="help">Upload your clinic logo — printed on covers in <b>Blank</b> mode and saved with templates. In Pre-print mode the envelope already carries the design, so the logo isn’t reprinted.</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-head"><span class="step">★</span><h2>Shorthand dictionary</h2><span class="hint">add · edit · delete</span></div>
+      <div class="card-head"><span class="step">★</span><h2>Shorthand dictionary</h2><span class="hint">tap to add</span></div>
       <div class="card-body">
         <input class="inp" id="dictSearch" placeholder="Search terms… (sos, sachet, 4-0-0-4)" oninput="renderDict()">
-        <button class="btn outline sm" style="margin-top:8px" onclick="dictAddNew()">+ Add shortcut</button>
-        <div id="dictForm" style="display:none;margin-top:10px;border:1px solid var(--line);border-radius:9px;padding:11px">
-          <div class="grid c2">
-            <div><label class="f">Shortcut / code</label><input class="inp" id="dCode" placeholder="sos"></div>
-            <div><label class="f">Example (optional)</label><input class="inp" id="dEg" placeholder="sos for fever"></div>
-          </div>
-          <label class="f" style="margin-top:9px">Meaning</label>
-          <input class="inp" id="dMean" placeholder="As needed for acute symptoms…">
-          <div style="display:flex;gap:7px;margin-top:10px">
-            <button class="btn primary sm" onclick="dictSaveForm()">Save shortcut</button>
-            <button class="btn ghost sm" onclick="dictCancelForm()">Cancel</button>
-          </div>
-        </div>
-        <div id="dictList" style="margin-top:10px;max-height:240px;overflow:auto"></div>
-        <div class="help">Add, edit (✎) or delete (×) your own shortcuts — saved permanently. Tap a term to drop it into the prescription. The assistant reads this dictionary so your shorthand expands consistently.</div>
+        <div id="dictList" style="margin-top:10px;max-height:230px;overflow:auto"></div>
+        <div class="help">Tap a term to drop it into your prescription so you don’t forget it. The assistant also reads this dictionary, so your shorthand expands consistently every time.</div>
       </div>
     </div>
 
@@ -421,25 +349,25 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
 <script>
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const LANGS={en:'English',ml:'Malayalam',hi:'Hindi',ta:'Tamil',kn:'Kannada',te:'Telugu',bn:'Bengali',ar:'Arabic'};
-const LANG_ORDER=['en','ml','hi','ta','kn','te','bn','ar'];
+const LANGS={ml:'Malayalam',hi:'Hindi',ta:'Tamil',kn:'Kannada',te:'Telugu',bn:'Bengali',ar:'Arabic'};
 const FIELDLABELS={name:'Patient Name',opd:'OPD Number',instr:'Instructions',no:'Prescription No',date:'Date & Time'};
 const TPLNAMES={large_plain:'Large · Plain',large_box:'Large · Box',small_plain:'Small · Plain',small_box:'Small · Box'};
-const DEFAULT_DICT=[
+const DICT={short:[
  {code:'tds',meaning:'Three times a day (morning, afternoon, and night).',eg:'4-4-4 tds'},
  {code:'bd',meaning:'Twice a day (morning and night).',eg:'Q bd 15 drop'},
  {code:'sos',meaning:'As needed (used for acute symptoms like pain, fever, weakness).',eg:'sos for severe pain'},
- {code:'alt',meaning:'Alternate between two or more medicines with a set time gap (e.g. 10 or 15 mins).',eg:'4 pills no.1 10 min 4 pills no.2 alt'},
+ {code:'alt / alternative',meaning:'Alternate between two or more medicines, keeping a specific time gap (e.g., 10 or 15 mins) between them.',eg:'4 pills no.1 10 min 4 pills no.2 alt'},
  {code:'Q',meaning:'Mother Tincture / Liquid Extract (external application, bathing, or drops).',eg:'Q external application'},
- {code:'4-4-4',meaning:'Dosage timing: Morning, Afternoon and Night.',eg:'4-4-4 pills'},
- {code:'4-0-0-4',meaning:'Dosage timing: Morning and Night (skip afternoon/evening).',eg:'4-0-0-4 pills'},
- {code:'0-0-4-4',meaning:'Dosage timing: Evening and Night.',eg:'0-0-4-4 tablet'},
- {code:'x [days]',meaning:'Total duration of the course.',eg:'x 15 days'},
- {code:'Drops',meaning:'Mix it with 1/2 glass of water.',eg:''},
- {code:'Pills',meaning:'Swallow it, or suck on it without water.',eg:''},
- {code:'Tablets',meaning:'Chew the tablet.',eg:''},
- {code:'Sachets',meaning:'For each dose, cut the sachet, mix it with 3 spoons of room temperature mineral water, and take it.',eg:''}
-];
+ {code:'X-X-X (e.g., 4-4-4)',meaning:'Dosage timing: Morning, Afternoon and Night.',eg:'4-4-4 pills'},
+ {code:'X-0-0-X (e.g., 4-0-0-4)',meaning:'Dosage timing: Morning and Night (skipping afternoon/evening).',eg:'4-0-0-4 pills'},
+ {code:'0-0-X-X (e.g., 0-0-4-4)',meaning:'Dosage timing: Evening and Night.',eg:'0-0-4-4 tablet'},
+ {code:'x [Days]',meaning:'Total duration of the course.',eg:'------ x 15 days'}
+],admin:[
+ {type:'Drops',rule:'Mix it with 1/2 glass of water.'},
+ {type:'Pills',rule:'Swallow it, suck on it without water.'},
+ {type:'Tablets',rule:'Chew the tablet.'},
+ {type:'Sachets',rule:'Always for each dose, cut the sachet, mix it with 3 spoons of room temperature mineral water, and take it.'}
+]};
 const FONTS=[["'Inter',sans-serif","Inter (default)"],["Arial,Helvetica,sans-serif","Arial"],["'Helvetica Neue',Helvetica,sans-serif","Helvetica"],["'Times New Roman',Times,serif","Times New Roman"],["Georgia,serif","Georgia"],["Tahoma,Verdana,sans-serif","Tahoma"],["Verdana,Geneva,sans-serif","Verdana"],["'Courier New',monospace","Courier New"]];
 
 /* ===== GitHub deployment: keep logos as separate files in the repo root ===== */
@@ -454,8 +382,8 @@ const DEFAULT_LAYOUTS={
 const BASEFS={large:0.34,small:0.30};
 
 let form={size:'large',style:'plain',stock:'blank'};
-let coverLangs=['en','ml']; let items=[]; let course=''; let dictEditIdx=-1;
-let settings={engine:'openai',baseUrl:'https://openrouter.ai/api/v1',oaKey:'',oaModel:'google/gemini-2.5-flash',anKey:'',anModel:'claude-sonnet-4-6',proxyUrl:'',offX:0,offY:0,rot:'90',layouts:{},inkColor:'#1E293B',accentColor:'#244A9B',typo:{global:{font:"'Inter',sans-serif",size:1,sx:1,sy:1},fields:{}},dict:[],logo:{show:true,dataUrl:''},langs:['en','ml']};
+let coverLangs=['ml']; let items=[]; let course='';
+let settings={engine:'openai',baseUrl:'https://openrouter.ai/api/v1',oaKey:'',oaModel:'google/gemini-2.5-flash',anKey:'',anModel:'claude-sonnet-4-6',proxyUrl:'',offX:0,offY:0,rot:'90',layouts:{},font:"'Inter',sans-serif",fontScale:1,inkColor:'#1E293B',accentColor:'#244A9B'};
 
 function p2(n){return String(n).padStart(2,'0');}
 function nowStr(){const d=new Date();let h=d.getHours();const ap=h>=12?'PM':'AM';h=h%12||12;return p2(d.getDate())+'-'+MON3[d.getMonth()]+'-'+d.getFullYear()+' '+p2(h)+':'+p2(d.getMinutes())+' '+ap;}
@@ -466,22 +394,15 @@ function effectiveLayout(key){const d=DEFAULT_LAYOUTS[key];const o=(settings.lay
 
 function init(){loadSettings();document.getElementById('todayPill').textContent=nowStr();document.getElementById('dt').value=nowStr();
   document.getElementById('covFont').innerHTML=FONTS.map(f=>'<option value="'+f[0]+'">'+f[1]+'</option>').join('');
-  syncLangpick();applyTypoUI();updateLogoUI();renderTemplates();renderDict();preloadWHLogo();
+  applyTypoInputs();renderDict();preloadWHLogo();
   document.getElementById('tplSel').value=form.size+'_'+form.style;renderFieldEditor();refresh();}
 function preloadWHLogo(){var im=new Image();im.onload=function(){WH_LOGO_OK=true;refresh();};im.onerror=function(){WH_LOGO_OK=false;};im.src=WH_LOGO;}
 function openSettings(){document.getElementById('drawer').classList.add('open');}
 function closeSettings(){document.getElementById('drawer').classList.remove('open');}
 function setEngine(v){settings.engine=v;document.querySelectorAll('#segEngine button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   document.getElementById('engOpenai').style.display=v==='openai'?'block':'none';document.getElementById('engAnthropic').style.display=v==='anthropic'?'block':'none';document.getElementById('engProxy').style.display=v==='proxy'?'block':'none';}
-function loadSettings(){var raw={};try{raw=JSON.parse(localStorage.getItem('wcp5')||'{}');}catch(e){}Object.assign(settings,raw);if(!settings.layouts)settings.layouts={};
-  if(!settings.inkColor)settings.inkColor='#1E293B';if(!settings.accentColor)settings.accentColor='#244A9B';
-  if(!raw.typo){settings.typo={global:{font:raw.font||"'Inter',sans-serif",size:raw.fontScale||1,sx:1,sy:1},fields:{}};}
-  if(!settings.typo.global)settings.typo.global={font:"'Inter',sans-serif",size:1,sx:1,sy:1};
-  if(typeof settings.typo.global.sx==='undefined')settings.typo.global.sx=1;if(typeof settings.typo.global.sy==='undefined')settings.typo.global.sy=1;
-  if(!settings.typo.fields)settings.typo.fields={};
-  if(!settings.dict||!settings.dict.length)settings.dict=JSON.parse(JSON.stringify(DEFAULT_DICT));
-  if(!settings.logo)settings.logo={show:true,dataUrl:''};if(typeof settings.logo.show==='undefined')settings.logo.show=true;
-  coverLangs=(settings.langs&&settings.langs.length)?settings.langs.slice():['en','ml'];
+function loadSettings(){try{Object.assign(settings,JSON.parse(localStorage.getItem('wcp5')||'{}'));}catch(e){}if(!settings.layouts)settings.layouts={};
+  if(!settings.font)settings.font="'Inter',sans-serif";if(!settings.fontScale)settings.fontScale=1;if(!settings.inkColor)settings.inkColor='#1E293B';if(!settings.accentColor)settings.accentColor='#244A9B';
   document.getElementById('baseUrl').value=settings.baseUrl;document.getElementById('oaKey').value=settings.oaKey;document.getElementById('oaModel').value=settings.oaModel;
   document.getElementById('anKey').value=settings.anKey;document.getElementById('anModel').value=settings.anModel;document.getElementById('proxyUrl').value=settings.proxyUrl;
   document.getElementById('offX').value=settings.offX;document.getElementById('offY').value=settings.offY;setEngine(settings.engine);
@@ -492,7 +413,6 @@ function saveSettings(){
   settings.anKey=document.getElementById('anKey').value.trim();settings.anModel=document.getElementById('anModel').value.trim()||'claude-sonnet-4-6';
   settings.proxyUrl=document.getElementById('proxyUrl').value.trim();
   settings.offX=parseFloat(document.getElementById('offX').value)||0;settings.offY=parseFloat(document.getElementById('offY').value)||0;
-  settings.langs=coverLangs.slice();
   localStorage.setItem('wcp5',JSON.stringify(settings));}
 
 function setSeg(g,v){form[g]=v;document.querySelectorAll('#seg'+g[0].toUpperCase()+g.slice(1)+' button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
@@ -504,9 +424,7 @@ function nudge(key,d){settings[key]=Math.round(((parseFloat(document.getElementB
 function onNudge(){settings.offX=parseFloat(document.getElementById('offX').value)||0;settings.offY=parseFloat(document.getElementById('offY').value)||0;saveSettings();refresh();}
 function toggleLang(){coverLangs=[...document.querySelectorAll('#langpick input:checked')].map(c=>c.value);
   document.querySelectorAll('#langpick label').forEach(l=>l.classList.toggle('on',l.querySelector('input').checked));
-  saveSettings();if(items.length)renderItems();buildMaster();refresh();}
-function syncLangpick(){document.querySelectorAll('#langpick input').forEach(function(c){c.checked=coverLangs.indexOf(c.value)>=0;});
-  document.querySelectorAll('#langpick label').forEach(function(l){l.classList.toggle('on',l.querySelector('input').checked);});}
+  if(items.length)renderItems();buildMaster();refresh();}
 
 /* ===== field editor ===== */
 function renderFieldEditor(){
@@ -525,72 +443,26 @@ function setField(key,fk,ix,val){
 function resetTemplate(){const key=document.getElementById('tplSel').value;if(settings.layouts&&settings.layouts[key])delete settings.layouts[key];saveSettings();renderFieldEditor();refresh();toast('Reset '+TPLNAMES[key]);}
 
 /* ===== dictionary ===== */
-function renderDict(){var q=(document.getElementById('dictSearch').value||'').toLowerCase();var d=settings.dict||[];
-  var rows=d.map(function(s,i){return {s:s,i:i};}).filter(function(o){return !q||((o.s.code||'')+' '+(o.s.meaning||'')+' '+(o.s.eg||'')).toLowerCase().indexOf(q)>=0;});
-  var html=rows.map(function(o){return '<div class="drow2"><button class="dins" onclick="dictInsert('+o.i+')"><b>'+esc(o.s.code)+'</b><span>'+esc(o.s.meaning)+'</span></button><div class="dax"><button title="Edit" onclick="dictEdit('+o.i+')">\u270E</button><button title="Delete" onclick="dictDelete('+o.i+')">\u00D7</button></div></div>';}).join('');
-  document.getElementById('dictList').innerHTML=html||'<div style="color:var(--text2);font-size:12px;padding:6px">No match.</div>';}
-function insertAtCursor(el,text){var s=el.selectionStart||el.value.length,e=el.selectionEnd||el.value.length,v=el.value;
-  el.value=v.slice(0,s)+text+v.slice(e);var p=s+text.length;el.selectionStart=el.selectionEnd=p;}
-function dictInsert(i){var it=(settings.dict||[])[i];if(!it)return;var txt=(it.eg&&it.eg.trim())?it.eg:it.meaning;var el=document.getElementById('paste');
-  insertAtCursor(el,(el.value&&!/\s$/.test(el.value)?' ':'')+txt+' ');el.focus();toast('Added: '+it.code);}
-function dictShowForm(s){document.getElementById('dictForm').style.display=s?'block':'none';}
-function dictAddNew(){dictEditIdx=-1;document.getElementById('dCode').value='';document.getElementById('dMean').value='';document.getElementById('dEg').value='';dictShowForm(true);}
-function dictEdit(i){var it=(settings.dict||[])[i];if(!it)return;dictEditIdx=i;document.getElementById('dCode').value=it.code||'';document.getElementById('dMean').value=it.meaning||'';document.getElementById('dEg').value=it.eg||'';dictShowForm(true);}
-function dictCancelForm(){dictShowForm(false);dictEditIdx=-1;}
-function dictSaveForm(){var code=document.getElementById('dCode').value.trim(),mean=document.getElementById('dMean').value.trim(),eg=document.getElementById('dEg').value.trim();
-  if(!code||!mean){toast('Enter a code and meaning');return;}var entry={code:code,meaning:mean,eg:eg};settings.dict=settings.dict||[];
-  if(dictEditIdx>=0)settings.dict[dictEditIdx]=entry;else settings.dict.push(entry);saveSettings();dictShowForm(false);dictEditIdx=-1;renderDict();toast('Shortcut saved');}
-function dictDelete(i){if(!confirm('Delete this shortcut?'))return;settings.dict.splice(i,1);saveSettings();renderDict();toast('Deleted');}
+function renderDict(){const q=(document.getElementById('dictSearch').value||'').toLowerCase();
+  const sr=DICT.short.map((s,i)=>({s,i})).filter(o=>!q||(o.s.code+' '+o.s.meaning+' '+o.s.eg).toLowerCase().includes(q));
+  const ar=DICT.admin.map((a,i)=>({a,i})).filter(o=>!q||(o.a.type+' '+o.a.rule).toLowerCase().includes(q));
+  let h='';
+  if(sr.length)h+='<div class="dgrp">Shorthand codes</div>'+sr.map(o=>`<button class="drow" onclick="dictInsert('short',${o.i})"><b>${esc(o.s.code)}</b><span>${esc(o.s.meaning)}</span></button>`).join('');
+  if(ar.length)h+='<div class="dgrp" style="margin-top:8px">Administration rules</div>'+ar.map(o=>`<button class="drow" onclick="dictInsert('admin',${o.i})"><b>${esc(o.a.type)}</b><span>${esc(o.a.rule)}</span></button>`).join('');
+  document.getElementById('dictList').innerHTML=h||'<div style="color:var(--muted);font-size:12px;padding:6px">No match.</div>';}
+function insertAtCursor(el,text){const s=el.selectionStart||el.value.length,e=el.selectionEnd||el.value.length,v=el.value;
+  el.value=v.slice(0,s)+text+v.slice(e);const p=s+text.length;el.selectionStart=el.selectionEnd=p;}
+function dictInsert(kind,i){const it=DICT[kind][i];const txt=kind==='short'?(it.eg||it.code):it.rule;const el=document.getElementById('paste');
+  insertAtCursor(el,(el.value&&!/\s$/.test(el.value)?' ':'')+txt+' ');el.focus();toast('Added: '+(kind==='short'?it.code:it.type));}
 
 /* ===== typography ===== */
-var TPROPIN={size:'covSize',sx:'covWidth',sy:'covHeight'};
-function typoTarget(){return document.getElementById('typoField').value;}
-function effTypo(fk){var g=(settings.typo&&settings.typo.global)||{},o=(settings.typo&&settings.typo.fields&&settings.typo.fields[fk])||{};
-  return {font:o.font||g.font||"'Inter',sans-serif",size:o.size||g.size||1,sx:o.sx||g.sx||1,sy:o.sy||g.sy||1};}
-function typoObjFor(tgt){if(tgt==='global')return settings.typo.global;settings.typo.fields[tgt]=settings.typo.fields[tgt]||{};return settings.typo.fields[tgt];}
-function setTypo(prop,val){var o=typoObjFor(typoTarget());o[prop]=val;saveSettings();updateTypoClearBtn();refresh();}
-function onTypoFont(){setTypo('font',document.getElementById('covFont').value);}
-function onColors(){settings.inkColor=document.getElementById('covInk').value;settings.accentColor=document.getElementById('covAccent').value;saveSettings();refresh();}
-function onTypoNum(prop){var id=TPROPIN[prop];var v=parseFloat(document.getElementById(id).value)||100;v=Math.max(40,Math.min(300,v));document.getElementById(id).value=Math.round(v);setTypo(prop,v/100);}
-function nudgeTypo(prop,d){var id=TPROPIN[prop];var cur=(parseFloat(document.getElementById(id).value)||100)/100;var nv=Math.max(0.4,Math.min(3,Math.round((cur+d)*100)/100));document.getElementById(id).value=Math.round(nv*100);setTypo(prop,nv);}
-function applyTypoUI(){var tgt=typoTarget();var e=tgt==='global'?settings.typo.global:Object.assign({},settings.typo.global,settings.typo.fields[tgt]||{});
-  document.getElementById('covFont').value=e.font||"'Inter',sans-serif";
-  document.getElementById('covSize').value=Math.round((e.size||1)*100);
-  document.getElementById('covWidth').value=Math.round((e.sx||1)*100);
-  document.getElementById('covHeight').value=Math.round((e.sy||1)*100);
-  document.getElementById('covInk').value=settings.inkColor||'#1E293B';
-  document.getElementById('covAccent').value=settings.accentColor||'#244A9B';
-  updateTypoClearBtn();}
-function updateTypoClearBtn(){var tgt=typoTarget();var has=tgt!=='global'&&settings.typo.fields[tgt]&&Object.keys(settings.typo.fields[tgt]).length;document.getElementById('typoClearBtn').style.display=has?'inline-flex':'none';}
-function clearTypoField(){var tgt=typoTarget();if(tgt!=='global'&&settings.typo.fields[tgt]){delete settings.typo.fields[tgt];saveSettings();applyTypoUI();refresh();toast('Field style cleared');}}
-function resetTypo(){settings.typo={global:{font:"'Inter',sans-serif",size:1,sx:1,sy:1},fields:{}};settings.inkColor='#1E293B';settings.accentColor='#244A9B';applyTypoUI();saveSettings();refresh();toast('Text style reset');}
-/* ===== templates ===== */
-var TKEY='wcp_templates';
-function getTpls(){try{return JSON.parse(localStorage.getItem(TKEY)||'{}');}catch(e){return {};}}
-function setTpls(o){localStorage.setItem(TKEY,JSON.stringify(o));}
-function clone(o){return o?JSON.parse(JSON.stringify(o)):o;}
-function renderTemplates(){var t=getTpls();var names=Object.keys(t);var sel=document.getElementById('tplProfile');
-  sel.innerHTML='<option value="">\u2014 none \u2014</option>'+names.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('');}
-function onTplSelect(){var n=document.getElementById('tplProfile').value;if(n)document.getElementById('tplName').value=n;}
-function tplSnapshot(){return {layouts:clone(settings.layouts),rot:settings.rot,offX:settings.offX,offY:settings.offY,typo:clone(settings.typo),inkColor:settings.inkColor,accentColor:settings.accentColor,logo:clone(settings.logo),langs:coverLangs.slice()};}
-function saveTemplate(){var name=(document.getElementById('tplName').value||document.getElementById('tplProfile').value||'').trim();if(!name){toast('Name the template first');return;}var t=getTpls();t[name]=tplSnapshot();setTpls(t);renderTemplates();document.getElementById('tplProfile').value=name;toast('Saved template: '+name);}
-function loadTemplate(){var n=document.getElementById('tplProfile').value;if(!n){toast('Pick a template to load');return;}var s=getTpls()[n];if(!s){toast('Not found');return;}
-  settings.layouts=clone(s.layouts)||{};settings.rot=s.rot||'90';settings.offX=s.offX||0;settings.offY=s.offY||0;
-  settings.typo=clone(s.typo)||{global:{font:"'Inter',sans-serif",size:1,sx:1,sy:1},fields:{}};if(!settings.typo.global)settings.typo.global={font:"'Inter',sans-serif",size:1,sx:1,sy:1};if(!settings.typo.fields)settings.typo.fields={};
-  settings.inkColor=s.inkColor||'#1E293B';settings.accentColor=s.accentColor||'#244A9B';settings.logo=clone(s.logo)||{show:true,dataUrl:''};
-  coverLangs=(s.langs&&s.langs.length)?s.langs.slice():['en','ml'];
-  syncAllUI();saveSettings();if(items.length)renderItems();buildMaster();refresh();toast('Loaded template: '+n);}
-function deleteTemplate(){var n=document.getElementById('tplProfile').value;if(!n){toast('Pick a template');return;}if(!confirm('Delete template "'+n+'"?'))return;var t=getTpls();delete t[n];setTpls(t);renderTemplates();toast('Deleted '+n);}
-function syncAllUI(){document.getElementById('offX').value=settings.offX;document.getElementById('offY').value=settings.offY;
-  document.querySelectorAll('#segRot button').forEach(function(b){b.classList.toggle('on',b.dataset.v===String(settings.rot));});
-  syncLangpick();applyTypoUI();updateLogoUI();renderFieldEditor();}
-/* ===== clinic logo ===== */
-function updateLogoUI(){var prev=document.getElementById('logoPrev');var has=settings.logo&&settings.logo.dataUrl;
-  prev.innerHTML=has?'<img src="'+settings.logo.dataUrl+'" style="max-width:100%;max-height:100%">':'<span style="font-size:10px;color:var(--text2)">none</span>';
-  var tb=document.getElementById('logoToggle');var on=!(settings.logo&&settings.logo.show===false);tb.textContent='Logo: '+(on?'On':'Off');tb.classList.toggle('act',on);}
-function logoUpload(input){var fl=input.files&&input.files[0];if(!fl)return;var rd=new FileReader();rd.onload=function(){settings.logo=settings.logo||{show:true};settings.logo.dataUrl=rd.result;settings.logo.show=true;saveSettings();updateLogoUI();refresh();toast('Logo updated');};rd.readAsDataURL(fl);}
-function toggleLogoShow(){settings.logo=settings.logo||{show:true,dataUrl:''};settings.logo.show=(settings.logo.show===false);saveSettings();updateLogoUI();refresh();}
-function removeLogo(){if(settings.logo)settings.logo.dataUrl='';saveSettings();updateLogoUI();refresh();toast('Logo removed');}
+function applyTypoInputs(){document.getElementById('covFont').value=settings.font||"'Inter',sans-serif";
+  document.getElementById('covScale').value=Math.round((settings.fontScale||1)*100);
+  document.getElementById('covInk').value=settings.inkColor||'#14202e';document.getElementById('covAccent').value=settings.accentColor||'#10294C';}
+function onTypo(){settings.font=document.getElementById('covFont').value;settings.inkColor=document.getElementById('covInk').value;settings.accentColor=document.getElementById('covAccent').value;saveSettings();refresh();}
+function onScaleInput(){let v=parseFloat(document.getElementById('covScale').value)||100;v=Math.max(50,Math.min(220,v));settings.fontScale=v/100;document.getElementById('covScale').value=Math.round(v);saveSettings();refresh();}
+function nudgeScale(d){settings.fontScale=Math.max(0.5,Math.min(2.2,Math.round(((settings.fontScale||1)+d)*100)/100));document.getElementById('covScale').value=Math.round(settings.fontScale*100);saveSettings();refresh();}
+function resetTypo(){settings.font="'Inter',sans-serif";settings.fontScale=1;settings.inkColor='#1E293B';settings.accentColor='#244A9B';applyTypoInputs();saveSettings();refresh();toast('Text style reset');}
 
 function refDate(){const s=document.getElementById('dt').value.trim();
   let m=s.match(/^(\d{1,2})-([A-Za-z]{3,})-(\d{4})/);
@@ -616,8 +488,8 @@ function buildSystem(){return [
 "Return ONLY valid JSON, no markdown fences, no commentary, in this exact shape:",
 '{"course":"one-line course summary or empty string","items":[{"n":1,"section":"15 DAYS","sos":false,"en":"...","ml":"...","hi":"..."}]}',
 "For each item include 'en' plus one field per requested language code (ml, hi, ta, kn, te, bn, ar). Use the language CODE as the key. Omit languages that were not requested."
-].join("\n")+"\n\nGlossary — use these standard meanings/wording when expanding (append the matching administration wording when relevant):\n"+(settings.dict||[]).map(function(s){return '  '+s.code+' = '+s.meaning;}).join("\n");}
-function buildUser(){var tl=coverLangs.filter(function(c){return c!=='en';});var langs=tl.length?tl.map(function(c){return c+' ('+LANGS[c]+')';}).join(', '):'none (English only — just elaborate, no translation needed)';
+].join("\n")+"\n\nGlossary — use these standard shorthand meanings when expanding:\n"+DICT.short.map(s=>'  '+s.code+' = '+s.meaning).join("\n")+"\nStandard administration wording (append the matching rule when a medicine of that type is given):\n"+DICT.admin.map(a=>'  '+a.type+': '+a.rule).join("\n");}
+function buildUser(){const langs=coverLangs.length?coverLangs.map(c=>c+' ('+LANGS[c]+')').join(', '):'none';
   return "REFERENCE DATE (today): "+refDateLong()+"\nRequested languages: "+langs+"\n\nPRESCRIPTION:\n"+document.getElementById('paste').value.trim();}
 async function callOpenAI(sys,usr){const url=settings.baseUrl.replace(/\/$/,'')+'/chat/completions';
   const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+settings.oaKey,'HTTP-Referer':location.origin,'X-Title':'Wise Cover Printer'},
@@ -642,8 +514,7 @@ async function processRx(){
   try{const sys=buildSystem(),usr=buildUser();
     const raw=settings.engine==='anthropic'?await callAnthropic(sys,usr):settings.engine==='proxy'?await callProxy(sys,usr):await callOpenAI(sys,usr);
     const obj=parseJSONObject(raw);course=obj.course||'';
-    var tl=coverLangs.filter(function(c){return c!=='en';});
-    items=(obj.items||[]).map((o,i)=>{const tr={};tl.forEach(function(c){if(o[c])tr[c]=String(o[c]).trim();});
+    items=(obj.items||[]).map((o,i)=>{const tr={};coverLangs.forEach(c=>{if(o[c])tr[c]=String(o[c]).trim();});
       return {n:o.n||i+1,section:(o.section||'').toUpperCase(),sos:!!o.sos,en:String(o.en||'').trim(),tr,on:true,style:form.style};});
     if(!items.length)throw new Error('no items parsed');
     document.getElementById('resultsCard').style.display='block';renderItems();buildMaster();refresh();
@@ -654,7 +525,7 @@ async function processRx(){
 function renderItems(){
   document.getElementById('itemCount').textContent=items.filter(i=>i.on).length+' active';
   document.getElementById('items').innerHTML=items.map((it,idx)=>{
-    const rows=coverLangs.filter(function(c){return c!=='en';}).map(c=>'<div class="lng"><div class="lk">'+LANGS[c]+'</div><textarea class="'+c+'" oninput="editTr('+idx+',\''+c+'\',this.value)">'+esc(it.tr[c]||'')+'</textarea></div>').join('');
+    const rows=coverLangs.map(c=>'<div class="lng"><div class="lk">'+LANGS[c]+'</div><textarea class="'+c+'" oninput="editTr('+idx+',\''+c+'\',this.value)">'+esc(it.tr[c]||'')+'</textarea></div>').join('');
     return '<div class="item '+(it.sos?'sos':'')+' '+(it.on?'':'off')+'">'+
       '<div class="ih"><span class="badge">'+it.n+'</span><span class="sec">'+esc(it.section||(it.sos?'SOS':''))+'</span>'+
         '<div class="ctrl"><button class="'+(it.style==='box'?'act':'')+'" onclick="toggleStyle('+idx+')">'+(it.style==='box'?'Box':'Plain')+'</button>'+
@@ -665,9 +536,9 @@ function editEn(i,v){items[i].en=v;buildMaster();refresh();}
 function editTr(i,c,v){items[i].tr[c]=v;buildMaster();refresh();}
 function toggleItem(i){items[i].on=!items[i].on;renderItems();refresh();}
 function toggleStyle(i){items[i].style=items[i].style==='box'?'plain':'box';renderItems();refresh();}
-function buildMaster(){let out='';if(course)out+='(Note: '+course+')\n\n';let last=null;var show=coverLangs.length?coverLangs:['en'];
-  items.forEach(function(it){if(it.section&&it.section!==last){out+='----------------- '+it.section+' -----------------\n';last=it.section;}
-    out+='\n'+it.n+'.\nEnglish: '+it.en+'\n';LANG_ORDER.forEach(function(c){if(c!=='en'&&show.indexOf(c)>=0&&it.tr[c])out+=LANGS[c]+': '+it.tr[c]+'\n';});});
+function buildMaster(){let out='';if(course)out+='(Note: '+course+')\n\n';let last=null;
+  items.forEach(it=>{if(it.section&&it.section!==last){out+='----------------- '+it.section+' -----------------\n';last=it.section;}
+    out+='\n'+it.n+'.\nEnglish: '+it.en+'\n';coverLangs.forEach(c=>{if(it.tr[c])out+=LANGS[c]+': '+it.tr[c]+'\n';});});
   document.getElementById('master').value=out.trim();}
 function copyMaster(){const t=document.getElementById('master');t.select();try{document.execCommand('copy');toast('Copied');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(t.value).then(()=>toast('Copied'));}}
 
@@ -676,34 +547,21 @@ function patientCtx(){return {op:document.getElementById('op').value.trim(),name
 function activeItems(){return items.filter(i=>i.on);}
 function rect(a){return 'left:'+a[0]+'cm;top:'+a[1]+'cm;width:'+a[2]+'cm;height:'+a[3]+'cm;';}
 function coversToRender(){const act=activeItems();return act.map(it=>({item:it,head:(it.section||(it.sos?'SOS':''))+(act.length>1?' · No. '+it.n+' / '+act.length:''),style:it.style||form.style}));}
-function instrHTML(it,headTxt,base,ti){base=base||BASEFS[form.size];
-  var show=coverLangs.length?coverLangs:['en'];
-  var h=headTxt?'<div class="hd" style="font-size:'+(base*0.66).toFixed(3)+'cm">'+esc(headTxt)+'</div>':'';
-  var body='';
-  LANG_ORDER.forEach(function(c){if(show.indexOf(c)<0)return;
-    if(c==='en'){body+='<div class="ln" style="font-size:'+base.toFixed(3)+'cm"><span class="lk">\u2022 English:</span> <span class="lv">'+(esc(it.en)||'<i style="color:#9aa6b6">No instruction</i>')+'</span></div>';}
-    else if(it.tr[c]){body+='<div class="ln reg '+c+'" style="font-size:'+(base*1.04).toFixed(3)+'cm"><span class="lk">'+LANGS[c]+':</span> <span class="lv">'+esc(it.tr[c])+'</span></div>';}});
-  if(!body)body='<div class="ln" style="font-size:'+base.toFixed(3)+'cm"><span class="lv"><i style="color:#9aa6b6">No instruction</i></span></div>';
-  var inner=h+body;
-  if(ti&&(ti.sx!==1||ti.sy!==1))inner='<div style="transform-origin:left top;transform:scale('+ti.sx+','+ti.sy+')">'+inner+'</div>';
-  return inner;}
-function fldHTML(cls,r,baseCm,fk,text){var t=effTypo(fk);
-  var inner=(t.sx!==1||t.sy!==1)?'<span style="display:inline-block;transform-origin:left top;transform:scale('+t.sx+','+t.sy+')">'+text+'</span>':text;
-  return '<div class="fld '+cls+'" style="'+rect(r)+'font-family:'+t.font+';font-size:'+(baseCm*t.size).toFixed(3)+'cm'+(fk==='date'?';overflow:visible;white-space:nowrap':'')+'">'+inner+'</div>';}
+function instrHTML(it,headTxt){const base=BASEFS[form.size]*(settings.fontScale||1);
+  let h=headTxt?'<div class="hd" style="font-size:'+(base*0.66).toFixed(3)+'cm">'+esc(headTxt)+'</div>':'';
+  let body='<div class="ln" style="font-size:'+base.toFixed(3)+'cm"><span class="lk">• English:</span> <span class="lv">'+(esc(it.en)||'<i style="color:#9aa6b6">No instruction</i>')+'</span></div>';
+  coverLangs.forEach(c=>{if(it.tr[c])body+='<div class="ln reg '+c+'" style="font-size:'+(base*1.04).toFixed(3)+'cm"><span class="lk">'+LANGS[c]+':</span> <span class="lv">'+esc(it.tr[c])+'</span></div>';});
+  return h+body;}
 function buildCover(P,it,headTxt,style){
   const cv=CANVAS[form.size],f=effectiveLayout(form.size+'_'+(style||'plain'));
   const textonly=form.stock==='pre';
   const ox=textonly?(settings.offX/10):0, oy=textonly?(settings.offY/10):0;
-  const nb=(form.size==='large'?0.36:0.32), db=(form.size==='large'?0.28:0.26);
-  var g=settings.typo.global||{};var CF=g.font||"'Inter',sans-serif",CI=settings.inkColor||'#1E293B',CA=settings.accentColor||'#244A9B';
-  var ti=effTypo('instr');var ibase=BASEFS[form.size]*ti.size;
-  const startNo = parseInt(String(P.pno || '').replace(/\D/g, ''), 10) || 1;
-  const currentNo = startNo + (it.n - 1);
-  const noTxt = 'No.' + currentNo;
-  var logoHtml='';
-  if(!settings.logo||settings.logo.show!==false){var src=(settings.logo&&settings.logo.dataUrl)||(WH_LOGO_OK?WH_LOGO:'');logoHtml=src?'<img class="wh-logo" src="'+src+'" style="height:.9cm">':'<div class="logo-ph">LOGO</div>';}
+  const sc=settings.fontScale||1;
+  const fsVal=((form.size==='large'?0.36:0.32)*sc).toFixed(3), fsDate=((form.size==='large'?0.28:0.26)*sc).toFixed(3);
+  const CF=settings.font||"'Inter',sans-serif",CI=settings.inkColor||'#1E293B',CA=settings.accentColor||'#244A9B';
+  const noTxt=P.pno||('No. '+activeItems().length);
   const design='<div class="layer design"><div class="watermark"></div>'+
-    '<div class="brand">'+logoHtml+'<div class="bt">Wise Homeopathy<small>Dispensary</small></div></div>'+
+    '<div class="brand">'+(WH_LOGO_OK?'<img class="wh-logo" src="'+WH_LOGO+'" style="height:.9cm">':'<div class="logo-ph">LOGO</div>')+'<div class="bt">Wise Homeopathy<small>Dispensary</small></div></div>'+
     '<div class="lbl" style="left:'+f.name[0]+'cm;top:'+(f.name[1]-0.42).toFixed(2)+'cm">PATIENT NAME</div>'+
     '<div class="lbl" style="left:'+f.opd[0]+'cm;top:'+(f.opd[1]-0.42).toFixed(2)+'cm">OPD NUMBER</div>'+
     '<div class="lbl" style="left:'+f.instr[0]+'cm;top:'+(f.instr[1]-0.42).toFixed(2)+'cm">HOW TO TAKE THE MEDICINE</div>'+
@@ -711,11 +569,11 @@ function buildCover(P,it,headTxt,style){
     '<div class="lbl" style="left:'+f.date[0]+'cm;top:'+(f.date[1]-0.42).toFixed(2)+'cm">DATE – TIME</div>'+
     '<div class="pellets"><i></i><i></i><i></i></div></div>';
   const content='<div class="layer content" style="transform:translate('+ox+'cm,'+oy+'cm)">'+
-    fldHTML('name',f.name,nb,'name',esc(P.name||'—'))+
-    fldHTML('val',f.opd,nb,'opd',esc(P.op||'—'))+
-    fldHTML('val',f.no,nb,'no',esc(noTxt))+
-    fldHTML('',f.date,db,'date',esc(P.date))+
-    '<div class="instr" style="'+rect(f.instr)+'font-family:'+ti.font+'">'+instrHTML(it,headTxt,ibase,ti)+'</div></div>';
+    '<div class="fld name" style="'+rect(f.name)+'font-size:'+fsVal+'cm">'+esc(P.name||'—')+'</div>'+
+    '<div class="fld val" style="'+rect(f.opd)+'font-size:'+fsVal+'cm">'+esc(P.op||'—')+'</div>'+
+    '<div class="fld val" style="'+rect(f.no)+'font-size:'+fsVal+'cm">'+esc(noTxt)+'</div>'+
+    '<div class="fld" style="'+rect(f.date)+'font-size:'+fsDate+'cm;overflow:visible;white-space:nowrap">'+esc(P.date)+'</div>'+
+    '<div class="instr" style="'+rect(f.instr)+'">'+instrHTML(it,headTxt)+'</div></div>';
   return '<div class="cover '+(textonly?'textonly transparent':'')+'" style="--cf:'+CF+';--ci:'+CI+';--ca:'+CA+';width:'+cv.w+'cm;height:'+cv.h+'cm">'+design+content+'</div>';
 }
 function fitCovers(root){root.querySelectorAll('.cover .instr').forEach(box=>{let g=0;
