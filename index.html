@@ -604,13 +604,19 @@ function refDate(){const s=document.getElementById('dt').value.trim();
   m=s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);return new Date();}
 function refDateLong(){const d=refDate();return d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();}
 
-/* ===== AI ===== */
-/* Stage 1 = English only. Stage 2 = on-demand translation. Single JSON schema, used-dictionary only, no duplicated examples. */
+/* ===== AI =====
+   Architecture: JavaScript owns ALL structure (numbering, sections, SOS, ordering,
+   metadata). The AI is a pure language function — given one rough instruction it
+   returns one English sentence. Nothing about structure depends on AI JSON.
+     Stage 1: parse (JS) -> per-instruction English generation (AI) -> merge into items[].
+     Stage 2: on-demand translation (unchanged). */
 var lastRawResponse='';                 /* preserved raw AI text for debugging */
 var translating=false;                  /* guards concurrent Stage-2 runs */
-var EN_BATCH_THRESHOLD=15, EN_PER_BATCH=10, TR_PER_BATCH=12;
+var TR_PER_BATCH=12;                    /* Stage-2 batch size */
+var MAX_PARALLEL_REQUESTS=3;            /* Stage-1 concurrency limit */
+var MAX_ITEM_RETRIES=2;                 /* Stage-1 retries per instruction (3 attempts total) */
 
-/* --- dictionary filter: send only entries actually used in the prescription --- */
+/* --- dictionary filter: send only entries actually used in an instruction --- */
 function dictMatches(code,low){
   var core=String(code||'').toLowerCase().replace(/\[.*?\]/g,'').trim();
   if(!core)return false;
@@ -625,31 +631,74 @@ function dictMatches(code,low){
 }
 function usedDictFor(text){var low=String(text||'').toLowerCase();return (settings.dict||[]).filter(function(s){return dictMatches(s.code,low);});}
 
-/* --- Stage 1 prompts (English only) --- */
-function buildSystemEN(used){
+/* ===== Step 1 — deterministic prescription parser (JS owns structure) =====
+   Returns {course, items:[{n, section, sos, text}]} — number, section, SOS and
+   order all come from the frontend, never from the AI. */
+function sectionLabel(rawLine){
+  var raw=String(rawLine||'');
+  var core=raw.replace(/[\-=_*~]/g,'').replace(/\s+/g,' ').trim();
+  if(!core||/^\d+[.)]/.test(core))return null;
+  var hadSymbols=/[\-=_*~]/.test(raw)&&raw.replace(/[\-=_*~\s]/g,'').length>0;
+  if(hadSymbols&&core.split(/\s+/).length<=5)return core;          /* "---- 15 days ----" / "---- sos ----" */
+  if(/^(sos|s\.?o\.?s\.?)$/i.test(core))return 'SOS';              /* bare SOS */
+  if(/^x?\s*\d+\s*(day|days|week|weeks|month|months)$/i.test(core))return core; /* bare duration */
+  return null;
+}
+function isSosText(body,section){return /sos/i.test(section||'')|| /^(s\.?o\.?s\.?|as needed)\b/i.test(String(body||'').trim());}
+function parsePrescription(text){
+  var lines=String(text||'').split(/\r?\n/);
+  var numRe=/^\s*(\d+)[.)]\s+(.*)$/;
+  var items=[],section='',course='',cur=null;
+  function pushCur(){if(cur){cur.text=cur.text.trim();if(cur.text)items.push(cur);cur=null;}}
+  for(var i=0;i<lines.length;i++){
+    var raw=lines[i],t=raw.trim();
+    if(!t)continue;
+    var nm=t.match(numRe);
+    if(nm){pushCur();var body=nm[2].trim();cur={n:parseInt(nm[1],10),section:section,sos:isSosText(body,section),text:body};continue;}
+    var sec=sectionLabel(raw);
+    if(sec){pushCur();section=sec.toUpperCase();if(!course&&/\d+\s*(day|days|week|weeks|month|months)/i.test(section))course=section;continue;}
+    if(/^[\-=_*~\s]+$/.test(t))continue;                            /* pure divider symbols, no label */
+    if(cur)cur.text+=' '+t;                                          /* continuation of current instruction */
+  }
+  pushCur();
+  /* fallback: unnumbered free text becomes a single instruction so nothing is lost */
+  if(!items.length){var b=String(text||'').trim();if(b)items.push({n:1,section:'',sos:isSosText(b,''),text:b});}
+  return {course:course,items:items};
+}
+
+/* ===== Step 3 — minimal per-instruction prompts (AI = language only) ===== */
+function buildSystemENItem(used){
   var lines=[
 "You are the prescription assistant for Wise Homeopathy, a homeopathy dispensary in Kerala, India.",
-"You receive a doctor's rough shorthand prescription. It may have numbered instructions (1,2,3...) and section dividers such as '15 DAYS' or 'SOS'.",
-"Do ALL of the following:",
-"1. Split into individual numbered instructions, preserving order.",
-"2. Rewrite each as a clear, complete, patient-friendly English instruction in the house style shown below.",
-"3. Resolve every relative date (today / tonight / tomorrow / day after / 'day N' / 'X day course') using the REFERENCE DATE given by the user, and write the real date in brackets, e.g. (June 17).",
-"4. Append the matching administration wording from the glossary when relevant.",
-"5. Mark whether each item belongs to an SOS / as-needed section.",
+"Rewrite ONE rough shorthand medicine instruction as a single clear, complete, patient-friendly English instruction in the house style below.",
+"Resolve any relative date (today / tonight / tomorrow / day after / 'day N' / 'X day course') using the REFERENCE DATE and write the real date in brackets, e.g. (June 17).",
+"Append the matching administration wording from the glossary when relevant.",
+"Keep all numbers, dosages, medicine numbers (No.1, No.2) and timings exactly.",
 "House style examples:",
-"  rough: '1 sachet tomorrow, mix 3 spoons mineral water' => 'Take one sachet tomorrow (June 17). For each dose, cut the sachet, mix the contents with 3 spoons of room temperature mineral water, and take it.'",
-"  rough: '4-0-0-4 pills' => 'Take 4 pills in the morning and 4 pills at night (4-0-0-4).'",
-"  rough: '1 tablet afternoon' => 'Take 1 tablet in the afternoon.'",
-"  rough SOS: 'sos fever 4 pills no.1 after 10min no.2 repeat 2 hrly' => 'As needed (SOS) for fever: Take 4 pills from Medicine No. 1, and after 10 minutes take 4 pills from Medicine No. 2. Repeat this alternating process every 2 hours.'",
-"Return ONLY valid JSON, no markdown fences, no commentary, in this exact shape:",
-'{"course":"one-line course summary or empty string","items":[{"n":1,"section":"15 DAYS","sos":false,"en":"..."}]}',
-"Generate ENGLISH ONLY. Do NOT translate. Do NOT add language fields beyond 'en'."
+"  '1 sachet tomorrow, mix 3 spoons mineral water' => 'Take one sachet tomorrow (June 17). For each dose, cut the sachet, mix the contents with 3 spoons of room temperature mineral water, and take it.'",
+"  '4-0-0-4 pills' => 'Take 4 pills in the morning and 4 pills at night (4-0-0-4).'",
+"  '1 tablet afternoon' => 'Take 1 tablet in the afternoon.'",
+"  SOS 'sos fever 4 pills no.1 after 10min no.2 repeat 2 hrly' => 'As needed (SOS) for fever: Take 4 pills from Medicine No. 1, and after 10 minutes take 4 pills from Medicine No. 2. Repeat this alternating process every 2 hours.'",
+"Respond with ONLY the rewritten English instruction — plain text, no numbering, no labels, no commentary.",
+'You may optionally wrap it as {"english":"..."}, but plain text is preferred.'
   ];
   var gl=(used||[]).map(function(s){return '  '+s.code+' = '+s.meaning;}).join("\n");
-  if(gl)lines.push("","Glossary — use these standard meanings/wording when expanding:",gl);
+  if(gl)lines.push("","Glossary:",gl);
   return lines.join("\n");
 }
-function buildUserEN(text){return "REFERENCE DATE (today): "+refDateLong()+"\n\nPRESCRIPTION:\n"+text;}
+function buildUserENItem(it){
+  return "REFERENCE DATE (today): "+refDateLong()+"\n"+(it.sos?"This is an SOS / as-needed instruction.\n":"")+"\nINSTRUCTION:\n"+it.text;
+}
+/* Robustly pull the English out of either {"english":"..."} JSON or plain text. */
+function extractEnglish(raw){
+  var s=String(raw==null?'':raw).trim();
+  if(!s)return '';
+  try{var o=parseJSONObject(s);if(o){var v=o.english||o.en||o.text||o.translation||o.instruction;if(v)return String(v).trim();}}catch(e){}
+  s=s.replace(/^```[a-z]*\s*/i,'').replace(/```\s*$/,'').trim();
+  s=s.replace(/^(english|en|instruction)\s*[:\-]\s*/i,'').trim();
+  if(/^".*"$/.test(s)&&s.indexOf('"',1)===s.length-1)s=s.slice(1,-1).trim();
+  return s;
+}
 
 /* --- Stage 2 prompt (per language, tiny) --- */
 function buildTranslateSystem(lang){return [
@@ -659,28 +708,6 @@ function buildTranslateSystem(lang){return [
 "Do not add, remove, reinterpret, or output any English.",
 "Return ONLY valid JSON, no markdown fences, no commentary."
 ].join("\n");}
-
-/* --- deterministic chunking for large prescriptions --- */
-function isDividerLine(line){
-  var core=String(line||'').replace(/^[\-=_*~\s]+|[\-=_*~\s]+$/g,'').trim();
-  if(!core)return false;
-  if(/^\d+[.)]/.test(core))return false;
-  return core.length<=24&&core.split(/\s+/).length<=4;
-}
-function chunkRxText(text,perChunk){
-  var lines=String(text).split(/\r?\n/);var numRe=/^\s*\d+[.)]\s+/;
-  var chunks=[],cur=[],count=0,lastSection=null;
-  function flush(){if(cur.length){chunks.push(cur.join('\n'));cur=[];}}
-  for(var i=0;i<lines.length;i++){
-    var t=lines[i].trim();var isNum=numRe.test(t);
-    if(!isNum&&t&&isDividerLine(lines[i]))lastSection=lines[i].trim();
-    if(isNum&&count>0&&count%perChunk===0){flush();if(lastSection)cur.push(lastSection);}
-    cur.push(lines[i]);
-    if(isNum)count++;
-  }
-  flush();
-  return chunks.length?chunks:[text];
-}
 
 /* --- translation cache (localStorage) --- */
 var TRCACHE_KEY='wcp_trcache';
@@ -706,32 +733,49 @@ function engineReady(){if(settings.engine==='openai')return !!settings.oaKey;if(
 async function callEngine(sys,usr){
   return settings.engine==='anthropic'?await callAnthropic(sys,usr):settings.engine==='proxy'?await callProxy(sys,usr):await callOpenAI(sys,usr);}
 
-/* ===== Stage 1 — English generation (batched + retry) ===== */
-async function runEnglishOnce(chunkText,strict){
-  var sys=buildSystemEN(usedDictFor(chunkText))+(strict?"\n\nIMPORTANT: Output MUST be exactly one valid JSON object. No prose, no markdown fences, no trailing text.":"");
-  var usr=buildUserEN(chunkText);
-  var raw=await callEngine(sys,usr);lastRawResponse=raw;window.__wcpLastRaw=raw;
-  var obj=null;try{obj=parseJSONObject(raw);}catch(e){obj=null;}
-  if(!obj||!Array.isArray(obj.items)||!obj.items.length){
-    if(strict){console.warn('Stage1 raw response:',raw);throw new Error('AI returned no valid items');}
-    return await runEnglishOnce(chunkText,true); /* one stricter retry */
-  }
-  var its=obj.items.map(function(o,i){return {n:o.n||i+1,section:String(o.section||'').toUpperCase(),sos:!!o.sos,en:String(o.en||'').trim()};});
-  return {course:obj.course||'',items:its};
+/* ===== generic concurrency pool — runs `tasks` with at most `limit` in flight ===== */
+async function runPool(tasks,limit){
+  var results=new Array(tasks.length),idx=0;
+  async function worker(){while(idx<tasks.length){var cur=idx++;results[cur]=await tasks[cur]();}}
+  var n=Math.max(1,Math.min(limit||1,tasks.length)),workers=[];
+  for(var i=0;i<n;i++)workers.push(worker());
+  await Promise.all(workers);
+  return results;
 }
+
+/* ===== Step 2/3/4 — per-instruction English generation (cache + retry) ===== */
+var enCache={};                          /* session cache: refDate+sos+text -> english */
+function enCacheKey(it){return refDateLong()+'\u0001'+(it.sos?'S':'')+'\u0001'+String(it.text||'').trim();}
+async function generateItemEnglish(it){
+  var key=enCacheKey(it);
+  if(enCache[key]!=null)return {ok:true,en:enCache[key],cached:true};
+  var sys=buildSystemENItem(usedDictFor(it.text));
+  var usr=buildUserENItem(it);
+  var lastErr=null;
+  for(var attempt=0;attempt<=MAX_ITEM_RETRIES;attempt++){   /* 1 try + up to 2 retries */
+    try{
+      var strict=attempt>0?"\n\nRespond with ONLY the final English instruction as plain text.":"";
+      var raw=await callEngine(sys+strict,usr);lastRawResponse=raw;window.__wcpLastRaw=raw;
+      var en=extractEnglish(raw);
+      if(en){enCache[key]=en;return {ok:true,en:en,cached:false};}
+      lastErr=new Error('empty response');
+    }catch(e){lastErr=e;}
+  }
+  return {ok:false,en:'',error:lastErr?lastErr.message:'failed'};
+}
+/* Stage 1 orchestrator: parse -> generate each instruction independently in parallel.
+   Failed instructions keep their raw shorthand (never discarded) and are reported. */
 async function generateEnglish(text){
-  var numCount=(text.match(/^\s*\d+[.)]\s+/gm)||[]).length;
-  var chunks=numCount>EN_BATCH_THRESHOLD?chunkRxText(text,EN_PER_BATCH):[text];
-  var allItems=[],course='',failed=[];
-  for(var ci=0;ci<chunks.length;ci++){
-    try{var r=await runEnglishOnce(chunks[ci],false);if(r.course&&!course)course=r.course;allItems=allItems.concat(r.items);}
-    catch(e){failed.push(ci);}
-  }
-  for(var k=0;k<failed.length;k++){ /* retry only failed batches, once, stricter */
-    var r2=await runEnglishOnce(chunks[failed[k]],true);if(r2.course&&!course)course=r2.course;allItems=allItems.concat(r2.items);
-  }
-  allItems.forEach(function(it,i){it.n=i+1;});
-  return {course:course,items:allItems};
+  var parsed=parsePrescription(text);
+  var its=parsed.items;
+  var failures=[];
+  var tasks=its.map(function(it){return async function(){
+    var r=await generateItemEnglish(it);
+    if(r.ok){it.en=r.en;}else{it.en=it.text;failures.push(it.n);} /* fallback to raw text */
+    return r;
+  };});
+  await runPool(tasks,MAX_PARALLEL_REQUESTS);
+  return {course:parsed.course,items:its,failures:failures};
 }
 async function processRx(){
   if(!document.getElementById('paste').value.trim()){toast('Paste a prescription first');return;}
@@ -740,10 +784,12 @@ async function processRx(){
   try{
     var text=document.getElementById('paste').value.trim();
     var res=await generateEnglish(text);course=res.course||'';
-    items=res.items.map(function(o){return {n:o.n,section:o.section,sos:o.sos,en:o.en,tr:{},on:true,style:form.style};});
-    if(!items.length)throw new Error('no items parsed');
+    items=res.items.map(function(o){return {n:o.n,section:String(o.section||'').toUpperCase(),sos:!!o.sos,en:String(o.en||'').trim(),tr:{},on:true,style:form.style};});
+    if(!items.length)throw new Error('no instructions found in the pasted text');
     document.getElementById('resultsCard').style.display='block';renderItems();buildMaster();refresh();
-    toast('English ready · '+items.length+' instruction'+(items.length>1?'s':''));
+    if(res.failures&&res.failures.length){console.warn('Failed instructions:',res.failures,'last raw:',lastRawResponse);
+      toast(items.length+' ready · No. '+res.failures.join(', ')+' need review (raw text kept)');}
+    else toast('English ready · '+items.length+' instruction'+(items.length>1?'s':''));
     var sel=coverLangs.filter(function(c){return c!=='en';});
     if(sel.length)await translateLangs(sel,{});
   }catch(err){console.error(err);console.warn('Last raw AI response:',lastRawResponse);toast('Failed — '+(err.message||'check key / model / connection'));}
