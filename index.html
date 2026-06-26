@@ -214,6 +214,7 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
           <label><input type="checkbox" value="te" onchange="toggleLang()">Telugu</label>
           <label><input type="checkbox" value="bn" onchange="toggleLang()">Bengali</label>
           <label><input type="checkbox" value="ar" onchange="toggleLang()">Arabic</label>
+          <label><input type="checkbox" value="ru" onchange="toggleLang()">Russian</label>
         </div>
         <div class="help" style="margin-top:8px">Every language is independent — untick English to print Malayalam (or any language) only.</div>
         <div class="grid c3" style="margin-top:14px">
@@ -352,6 +353,10 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
     <div class="card" id="resultsCard" style="display:none">
       <div class="card-head"><span class="step">3</span><h2>Covers</h2><span class="hint" id="itemCount"></span></div>
       <div class="card-body">
+        <div id="trBar" style="display:flex;gap:8px;align-items:center;margin-bottom:11px;flex-wrap:wrap">
+          <button class="btn outline sm" id="trBtn" onclick="translateSelectedBtn()">✦ Translate selected languages</button>
+          <span class="hint" id="trStatus" style="font-size:11.5px;color:var(--text2)"></span>
+        </div>
         <div id="items"></div>
         <details style="margin-top:6px">
           <summary style="cursor:pointer;font-size:12.5px;color:var(--navy);font-weight:600">Full text (copy for records / PMS)</summary>
@@ -421,8 +426,8 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
 <script>
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const LANGS={en:'English',ml:'Malayalam',hi:'Hindi',ta:'Tamil',kn:'Kannada',te:'Telugu',bn:'Bengali',ar:'Arabic'};
-const LANG_ORDER=['en','ml','hi','ta','kn','te','bn','ar'];
+const LANGS={en:'English',ml:'Malayalam',hi:'Hindi',ta:'Tamil',kn:'Kannada',te:'Telugu',bn:'Bengali',ar:'Arabic',ru:'Russian'};
+const LANG_ORDER=['en','ml','hi','ta','kn','te','bn','ar','ru'];
 const FIELDLABELS={name:'Patient Name',opd:'OPD Number',instr:'Instructions',no:'Prescription No',date:'Date & Time'};
 const TPLNAMES={large_plain:'Large · Plain',large_box:'Large · Box',small_plain:'Small · Plain',small_box:'Small · Box'};
 const DEFAULT_DICT=[
@@ -502,9 +507,10 @@ function setStyleAll(v){form.style=v;document.querySelectorAll('#segStyle button
 function setRot(v){settings.rot=v;document.querySelectorAll('#segRot button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));saveSettings();refresh();}
 function nudge(key,d){settings[key]=Math.round(((parseFloat(document.getElementById(key).value)||0)+d)*10)/10;document.getElementById(key).value=settings[key];saveSettings();refresh();}
 function onNudge(){settings.offX=parseFloat(document.getElementById('offX').value)||0;settings.offY=parseFloat(document.getElementById('offY').value)||0;saveSettings();refresh();}
-function toggleLang(){coverLangs=[...document.querySelectorAll('#langpick input:checked')].map(c=>c.value);
+function toggleLang(){var prev=coverLangs.slice();coverLangs=[...document.querySelectorAll('#langpick input:checked')].map(c=>c.value);
   document.querySelectorAll('#langpick label').forEach(l=>l.classList.toggle('on',l.querySelector('input').checked));
-  saveSettings();if(items.length)renderItems();buildMaster();refresh();}
+  saveSettings();if(items.length)renderItems();buildMaster();refresh();
+  if(items.length){var added=coverLangs.filter(function(c){return c!=='en'&&prev.indexOf(c)<0;});if(added.length)translateLangs(added,{});}}
 function syncLangpick(){document.querySelectorAll('#langpick input').forEach(function(c){c.checked=coverLangs.indexOf(c.value)>=0;});
   document.querySelectorAll('#langpick label').forEach(function(l){l.classList.toggle('on',l.querySelector('input').checked);});}
 
@@ -599,14 +605,36 @@ function refDate(){const s=document.getElementById('dt').value.trim();
 function refDateLong(){const d=refDate();return d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();}
 
 /* ===== AI ===== */
-function buildSystem(){return [
+/* Stage 1 = English only. Stage 2 = on-demand translation. Single JSON schema, used-dictionary only, no duplicated examples. */
+var lastRawResponse='';                 /* preserved raw AI text for debugging */
+var translating=false;                  /* guards concurrent Stage-2 runs */
+var EN_BATCH_THRESHOLD=15, EN_PER_BATCH=10, TR_PER_BATCH=12;
+
+/* --- dictionary filter: send only entries actually used in the prescription --- */
+function dictMatches(code,low){
+  var core=String(code||'').toLowerCase().replace(/\[.*?\]/g,'').trim();
+  if(!core)return false;
+  var variants=[core];
+  if(/^[a-z]+s$/.test(core))variants.push(core.slice(0,-1));
+  else if(/^[a-z]+$/.test(core))variants.push(core+'s');
+  return variants.some(function(v){
+    if(!v)return false;
+    if(/^[a-z0-9]+$/.test(v))return new RegExp('\\b'+v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(low);
+    return low.indexOf(v)>=0;
+  });
+}
+function usedDictFor(text){var low=String(text||'').toLowerCase();return (settings.dict||[]).filter(function(s){return dictMatches(s.code,low);});}
+
+/* --- Stage 1 prompts (English only) --- */
+function buildSystemEN(used){
+  var lines=[
 "You are the prescription assistant for Wise Homeopathy, a homeopathy dispensary in Kerala, India.",
 "You receive a doctor's rough shorthand prescription. It may have numbered instructions (1,2,3...) and section dividers such as '15 DAYS' or 'SOS'.",
 "Do ALL of the following:",
 "1. Split into individual numbered instructions, preserving order.",
 "2. Rewrite each as a clear, complete, patient-friendly English instruction in the house style shown below.",
 "3. Resolve every relative date (today / tonight / tomorrow / day after / 'day N' / 'X day course') using the REFERENCE DATE given by the user, and write the real date in brackets, e.g. (June 17).",
-"4. Translate each instruction faithfully into EVERY requested language. Keep all dates, numbers, dosages, medicine numbers (No.1, No.2) and timings exactly.",
+"4. Append the matching administration wording from the glossary when relevant.",
 "5. Mark whether each item belongs to an SOS / as-needed section.",
 "House style examples:",
 "  rough: '1 sachet tomorrow, mix 3 spoons mineral water' => 'Take one sachet tomorrow (June 17). For each dose, cut the sachet, mix the contents with 3 spoons of room temperature mineral water, and take it.'",
@@ -614,11 +642,51 @@ function buildSystem(){return [
 "  rough: '1 tablet afternoon' => 'Take 1 tablet in the afternoon.'",
 "  rough SOS: 'sos fever 4 pills no.1 after 10min no.2 repeat 2 hrly' => 'As needed (SOS) for fever: Take 4 pills from Medicine No. 1, and after 10 minutes take 4 pills from Medicine No. 2. Repeat this alternating process every 2 hours.'",
 "Return ONLY valid JSON, no markdown fences, no commentary, in this exact shape:",
-'{"course":"one-line course summary or empty string","items":[{"n":1,"section":"15 DAYS","sos":false,"en":"...","ml":"...","hi":"..."}]}',
-"For each item include 'en' plus one field per requested language code (ml, hi, ta, kn, te, bn, ar). Use the language CODE as the key. Omit languages that were not requested."
-].join("\n")+"\n\nGlossary — use these standard meanings/wording when expanding (append the matching administration wording when relevant):\n"+(settings.dict||[]).map(function(s){return '  '+s.code+' = '+s.meaning;}).join("\n");}
-function buildUser(){var tl=coverLangs.filter(function(c){return c!=='en';});var langs=tl.length?tl.map(function(c){return c+' ('+LANGS[c]+')';}).join(', '):'none (English only — just elaborate, no translation needed)';
-  return "REFERENCE DATE (today): "+refDateLong()+"\nRequested languages: "+langs+"\n\nPRESCRIPTION:\n"+document.getElementById('paste').value.trim();}
+'{"course":"one-line course summary or empty string","items":[{"n":1,"section":"15 DAYS","sos":false,"en":"..."}]}',
+"Generate ENGLISH ONLY. Do NOT translate. Do NOT add language fields beyond 'en'."
+  ];
+  var gl=(used||[]).map(function(s){return '  '+s.code+' = '+s.meaning;}).join("\n");
+  if(gl)lines.push("","Glossary — use these standard meanings/wording when expanding:",gl);
+  return lines.join("\n");
+}
+function buildUserEN(text){return "REFERENCE DATE (today): "+refDateLong()+"\n\nPRESCRIPTION:\n"+text;}
+
+/* --- Stage 2 prompt (per language, tiny) --- */
+function buildTranslateSystem(lang){return [
+"You are a medical translator for Wise Homeopathy, a homeopathy dispensary in Kerala, India.",
+"Translate patient medicine instructions from English into "+LANGS[lang]+" ("+lang+"), faithfully and in simple language a patient can understand.",
+"Preserve all dates, numbers, dosages, medicine numbers (No.1, No.2), timings and bracketed dates exactly.",
+"Do not add, remove, reinterpret, or output any English.",
+"Return ONLY valid JSON, no markdown fences, no commentary."
+].join("\n");}
+
+/* --- deterministic chunking for large prescriptions --- */
+function isDividerLine(line){
+  var core=String(line||'').replace(/^[\-=_*~\s]+|[\-=_*~\s]+$/g,'').trim();
+  if(!core)return false;
+  if(/^\d+[.)]/.test(core))return false;
+  return core.length<=24&&core.split(/\s+/).length<=4;
+}
+function chunkRxText(text,perChunk){
+  var lines=String(text).split(/\r?\n/);var numRe=/^\s*\d+[.)]\s+/;
+  var chunks=[],cur=[],count=0,lastSection=null;
+  function flush(){if(cur.length){chunks.push(cur.join('\n'));cur=[];}}
+  for(var i=0;i<lines.length;i++){
+    var t=lines[i].trim();var isNum=numRe.test(t);
+    if(!isNum&&t&&isDividerLine(lines[i]))lastSection=lines[i].trim();
+    if(isNum&&count>0&&count%perChunk===0){flush();if(lastSection)cur.push(lastSection);}
+    cur.push(lines[i]);
+    if(isNum)count++;
+  }
+  flush();
+  return chunks.length?chunks:[text];
+}
+
+/* --- translation cache (localStorage) --- */
+var TRCACHE_KEY='wcp_trcache';
+function loadTrCache(){try{return JSON.parse(localStorage.getItem(TRCACHE_KEY)||'{}');}catch(e){return {};}}
+function saveTrCache(c){try{var keys=Object.keys(c);if(keys.length>5000){var keep=keys.slice(keys.length-3000);var nc={};keep.forEach(function(k){nc[k]=c[k];});c=nc;}localStorage.setItem(TRCACHE_KEY,JSON.stringify(c));}catch(e){}}
+function trCacheKey(lang,en){return lang+'\u0001'+String(en||'').trim();}
 async function callOpenAI(sys,usr){const url=settings.baseUrl.replace(/\/$/,'')+'/chat/completions';
   const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+settings.oaKey,'HTTP-Referer':location.origin,'X-Title':'Wise Cover Printer'},
     body:JSON.stringify({model:settings.oaModel,temperature:0.2,max_tokens:3000,messages:[{role:'system',content:sys},{role:'user',content:usr}]})});
@@ -635,21 +703,112 @@ async function callProxy(sys,usr){const r=await fetch(settings.proxyUrl,{method:
 function parseJSONObject(text){let t=String(text||'').trim().replace(/^```(json)?/i,'').replace(/```$/,'').trim();
   const s=t.indexOf('{'),e=t.lastIndexOf('}');if(s>-1&&e>-1)t=t.slice(s,e+1);return JSON.parse(t);}
 function engineReady(){if(settings.engine==='openai')return !!settings.oaKey;if(settings.engine==='anthropic')return !!settings.anKey;return !!settings.proxyUrl;}
+async function callEngine(sys,usr){
+  return settings.engine==='anthropic'?await callAnthropic(sys,usr):settings.engine==='proxy'?await callProxy(sys,usr):await callOpenAI(sys,usr);}
+
+/* ===== Stage 1 — English generation (batched + retry) ===== */
+async function runEnglishOnce(chunkText,strict){
+  var sys=buildSystemEN(usedDictFor(chunkText))+(strict?"\n\nIMPORTANT: Output MUST be exactly one valid JSON object. No prose, no markdown fences, no trailing text.":"");
+  var usr=buildUserEN(chunkText);
+  var raw=await callEngine(sys,usr);lastRawResponse=raw;window.__wcpLastRaw=raw;
+  var obj=null;try{obj=parseJSONObject(raw);}catch(e){obj=null;}
+  if(!obj||!Array.isArray(obj.items)||!obj.items.length){
+    if(strict){console.warn('Stage1 raw response:',raw);throw new Error('AI returned no valid items');}
+    return await runEnglishOnce(chunkText,true); /* one stricter retry */
+  }
+  var its=obj.items.map(function(o,i){return {n:o.n||i+1,section:String(o.section||'').toUpperCase(),sos:!!o.sos,en:String(o.en||'').trim()};});
+  return {course:obj.course||'',items:its};
+}
+async function generateEnglish(text){
+  var numCount=(text.match(/^\s*\d+[.)]\s+/gm)||[]).length;
+  var chunks=numCount>EN_BATCH_THRESHOLD?chunkRxText(text,EN_PER_BATCH):[text];
+  var allItems=[],course='',failed=[];
+  for(var ci=0;ci<chunks.length;ci++){
+    try{var r=await runEnglishOnce(chunks[ci],false);if(r.course&&!course)course=r.course;allItems=allItems.concat(r.items);}
+    catch(e){failed.push(ci);}
+  }
+  for(var k=0;k<failed.length;k++){ /* retry only failed batches, once, stricter */
+    var r2=await runEnglishOnce(chunks[failed[k]],true);if(r2.course&&!course)course=r2.course;allItems=allItems.concat(r2.items);
+  }
+  allItems.forEach(function(it,i){it.n=i+1;});
+  return {course:course,items:allItems};
+}
 async function processRx(){
   if(!document.getElementById('paste').value.trim()){toast('Paste a prescription first');return;}
   if(!engineReady()){openSettings();toast('Add your API key in Settings first');return;}
   const btn=document.getElementById('goBtn');const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='Working…';
-  try{const sys=buildSystem(),usr=buildUser();
-    const raw=settings.engine==='anthropic'?await callAnthropic(sys,usr):settings.engine==='proxy'?await callProxy(sys,usr):await callOpenAI(sys,usr);
-    const obj=parseJSONObject(raw);course=obj.course||'';
-    var tl=coverLangs.filter(function(c){return c!=='en';});
-    items=(obj.items||[]).map((o,i)=>{const tr={};tl.forEach(function(c){if(o[c])tr[c]=String(o[c]).trim();});
-      return {n:o.n||i+1,section:(o.section||'').toUpperCase(),sos:!!o.sos,en:String(o.en||'').trim(),tr,on:true,style:form.style};});
+  try{
+    var text=document.getElementById('paste').value.trim();
+    var res=await generateEnglish(text);course=res.course||'';
+    items=res.items.map(function(o){return {n:o.n,section:o.section,sos:o.sos,en:o.en,tr:{},on:true,style:form.style};});
     if(!items.length)throw new Error('no items parsed');
     document.getElementById('resultsCard').style.display='block';renderItems();buildMaster();refresh();
-    toast('Processed '+items.length+' instruction'+(items.length>1?'s':''));
-  }catch(err){console.error(err);toast('Failed — '+(err.message||'check key / model / connection'));}
+    toast('English ready · '+items.length+' instruction'+(items.length>1?'s':''));
+    var sel=coverLangs.filter(function(c){return c!=='en';});
+    if(sel.length)await translateLangs(sel,{});
+  }catch(err){console.error(err);console.warn('Last raw AI response:',lastRawResponse);toast('Failed — '+(err.message||'check key / model / connection'));}
   finally{btn.disabled=false;btn.innerHTML=old;}}
+
+/* ===== Stage 2 — on-demand translation (cache + batch + retry) ===== */
+function setTrStatus(t){var el=document.getElementById('trStatus');if(el)el.textContent=t||'';}
+function translateSelectedBtn(){
+  if(!items.length){toast('Generate English first');return;}
+  var sel=coverLangs.filter(function(c){return c!=='en';});
+  if(!sel.length){toast('Tick a language at the top first');return;}
+  translateLangs(sel,{force:false});
+}
+async function translateBatch(lang,list,cache,strict){
+  try{
+    var sys=buildTranslateSystem(lang)+(strict?"\n\nOutput MUST be exactly one valid JSON object. No markdown, no commentary.":"");
+    var payload=list.map(function(o,i){return {i:i,en:o.en};});
+    var usr="Translate each English instruction into "+LANGS[lang]+" ("+lang+"). Keep all dates, numbers, dosages, medicine numbers (No.1, No.2) and timings exactly as in the English.\nReturn ONLY JSON in this shape: {\"t\":[{\"i\":0,\"x\":\"<translation>\"}]}\n\nITEMS:\n"+JSON.stringify(payload);
+    var raw=await callEngine(sys,usr);lastRawResponse=raw;window.__wcpLastRaw=raw;
+    var obj=null;try{obj=parseJSONObject(raw);}catch(e){obj=null;}
+    var arr=obj&&(obj.t||obj.items||obj.translations);
+    if(!Array.isArray(arr))return false;
+    var map={};arr.forEach(function(e){if(e&&typeof e.i!=='undefined')map[e.i]=String(e.x!=null?e.x:(e.text!=null?e.text:(e.translation!=null?e.translation:''))).trim();});
+    var got=0;
+    list.forEach(function(o,i){var tx=map[i];if(tx){items[o.idx].tr[lang]=tx;cache[trCacheKey(lang,o.en)]=tx;got++;}});
+    return got>0;
+  }catch(e){return false;}
+}
+async function translateLangs(langCodes,opts){
+  opts=opts||{};
+  langCodes=(langCodes||[]).filter(function(c){return c&&c!=='en'&&LANGS[c];});
+  if(!items.length||!langCodes.length)return;
+  if(!engineReady()){openSettings();toast('Add your API key in Settings first');return;}
+  if(translating)return;translating=true;
+  var trBtn=document.getElementById('trBtn');if(trBtn)trBtn.disabled=true;
+  var cache=loadTrCache();var anyFail=false;
+  try{
+    /* fill from cache first, collect pending */
+    var pending={};
+    langCodes.forEach(function(lang){
+      items.forEach(function(it,idx){
+        var en=(it.en||'').trim();if(!en)return;
+        if(!opts.force&&it.tr[lang]&&it.tr[lang].trim())return;
+        var ck=trCacheKey(lang,en);
+        if(!opts.force&&cache[ck]){it.tr[lang]=cache[ck];return;}
+        (pending[lang]=pending[lang]||[]).push({idx:idx,en:en});
+      });
+    });
+    renderItems();buildMaster();refresh(); /* show cached hits immediately */
+    for(var li=0;li<langCodes.length;li++){
+      var lang=langCodes[li];var list=pending[lang];if(!list||!list.length)continue;
+      setTrStatus('Translating '+LANGS[lang]+'…');
+      var batches=[];for(var i=0;i<list.length;i+=TR_PER_BATCH)batches.push(list.slice(i,i+TR_PER_BATCH));
+      var failedBatches=[];
+      for(var bi=0;bi<batches.length;bi++){var ok=await translateBatch(lang,batches[bi],cache,false);if(!ok)failedBatches.push(bi);renderItems();buildMaster();refresh();}
+      for(var fi=0;fi<failedBatches.length;fi++){var ok2=await translateBatch(lang,batches[failedBatches[fi]],cache,true);if(!ok2)anyFail=true;}
+    }
+    saveTrCache(cache);
+    renderItems();buildMaster();refresh();
+    setTrStatus(anyFail?'Some translations failed — tap Translate to retry':'');
+    if(anyFail){console.warn('Last raw AI response:',lastRawResponse);toast('Some translations failed — tap Translate to retry');}
+    else toast('Translation complete');
+  }catch(err){console.error(err);console.warn('Last raw AI response:',lastRawResponse);setTrStatus('Translation error — tap Translate to retry');toast('Translation failed — '+(err.message||'check key / connection'));}
+  finally{translating=false;if(trBtn)trBtn.disabled=false;}
+}
 
 function renderItems(){
   document.getElementById('itemCount').textContent=items.filter(i=>i.on).length+' active';
