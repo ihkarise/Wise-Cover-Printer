@@ -614,7 +614,7 @@ var lastRawResponse='';                 /* preserved raw AI text for debugging *
 var translating=false;                  /* guards concurrent Stage-2 runs */
 var TR_PER_BATCH=12;                    /* Stage-2 batch size */
 var MAX_PARALLEL_REQUESTS=3;            /* Stage-1 concurrency limit */
-var MAX_ITEM_RETRIES=2;                 /* Stage-1 retries per instruction (3 attempts total) */
+var MAX_ITEM_RETRIES=1;                 /* one try + one retry, then report the instruction */
 
 /* --- dictionary filter: send only entries actually used in an instruction --- */
 function dictMatches(code,low){
@@ -666,21 +666,17 @@ function parsePrescription(text){
   return {course:course,items:items};
 }
 
-/* ===== Step 3 — minimal per-instruction prompts (AI = language only) ===== */
+/* ===== Step 3 — one concise per-instruction prompt (AI writes English only) ===== */
 function buildSystemENItem(used){
   var lines=[
 "You are the prescription assistant for Wise Homeopathy, a homeopathy dispensary in Kerala, India.",
-"Rewrite ONE rough shorthand medicine instruction as a single clear, complete, patient-friendly English instruction in the house style below.",
-"Resolve any relative date (today / tonight / tomorrow / day after / 'day N' / 'X day course') using the REFERENCE DATE and write the real date in brackets, e.g. (June 17).",
-"Append the matching administration wording from the glossary when relevant.",
-"Keep all numbers, dosages, medicine numbers (No.1, No.2) and timings exactly.",
-"House style examples:",
-"  '1 sachet tomorrow, mix 3 spoons mineral water' => 'Take one sachet tomorrow (June 17). For each dose, cut the sachet, mix the contents with 3 spoons of room temperature mineral water, and take it.'",
-"  '4-0-0-4 pills' => 'Take 4 pills in the morning and 4 pills at night (4-0-0-4).'",
-"  '1 tablet afternoon' => 'Take 1 tablet in the afternoon.'",
-"  SOS 'sos fever 4 pills no.1 after 10min no.2 repeat 2 hrly' => 'As needed (SOS) for fever: Take 4 pills from Medicine No. 1, and after 10 minutes take 4 pills from Medicine No. 2. Repeat this alternating process every 2 hours.'",
-"Respond with ONLY the rewritten English instruction — plain text, no numbering, no labels, no commentary.",
-'You may optionally wrap it as {"english":"..."}, but plain text is preferred.'
+"Rewrite the one rough shorthand medicine instruction the user gives you as a single clear, complete, patient-friendly English instruction.",
+"Resolve any relative date (today / tonight / tomorrow / day after / 'day N' / 'X day course') from the REFERENCE DATE and write the real date in brackets, e.g. (June 17). Keep all numbers, dosages, medicine numbers (No.1, No.2) and timings exactly. Use the glossary wording when relevant.",
+"Examples:",
+"  '1 sachet tomorrow, mix 3 spoons mineral water' -> Take one sachet tomorrow (June 17). For each dose, cut the sachet, mix the contents with 3 spoons of room temperature mineral water, and take it.",
+"  '4-0-0-4 pills' -> Take 4 pills in the morning and 4 pills at night (4-0-0-4).",
+"  'sos fever 4 pills no.1 after 10min no.2 repeat 2 hrly' -> As needed (SOS) for fever: Take 4 pills from Medicine No. 1, and after 10 minutes take 4 pills from Medicine No. 2. Repeat this alternating process every 2 hours.",
+"Reply with ONLY the rewritten English sentence(s) as plain text. No numbering, no labels, no JSON, no commentary."
   ];
   var gl=(used||[]).map(function(s){return '  '+s.code+' = '+s.meaning;}).join("\n");
   if(gl)lines.push("","Glossary:",gl);
@@ -689,11 +685,10 @@ function buildSystemENItem(used){
 function buildUserENItem(it){
   return "REFERENCE DATE (today): "+refDateLong()+"\n"+(it.sos?"This is an SOS / as-needed instruction.\n":"")+"\nINSTRUCTION:\n"+it.text;
 }
-/* Robustly pull the English out of either {"english":"..."} JSON or plain text. */
+/* Plain text in, plain text out. Defensively strip stray fences/labels/quotes a model might add. */
 function extractEnglish(raw){
   var s=String(raw==null?'':raw).trim();
   if(!s)return '';
-  try{var o=parseJSONObject(s);if(o){var v=o.english||o.en||o.text||o.translation||o.instruction;if(v)return String(v).trim();}}catch(e){}
   s=s.replace(/^```[a-z]*\s*/i,'').replace(/```\s*$/,'').trim();
   s=s.replace(/^(english|en|instruction)\s*[:\-]\s*/i,'').trim();
   if(/^".*"$/.test(s)&&s.indexOf('"',1)===s.length-1)s=s.slice(1,-1).trim();
@@ -752,7 +747,7 @@ async function generateItemEnglish(it){
   var sys=buildSystemENItem(usedDictFor(it.text));
   var usr=buildUserENItem(it);
   var lastErr=null;
-  for(var attempt=0;attempt<=MAX_ITEM_RETRIES;attempt++){   /* 1 try + up to 2 retries */
+  for(var attempt=0;attempt<=MAX_ITEM_RETRIES;attempt++){   /* one try, then one retry */
     try{
       var strict=attempt>0?"\n\nRespond with ONLY the final English instruction as plain text.":"";
       var raw=await callEngine(sys+strict,usr);lastRawResponse=raw;window.__wcpLastRaw=raw;
@@ -788,7 +783,7 @@ async function processRx(){
     if(!items.length)throw new Error('no instructions found in the pasted text');
     document.getElementById('resultsCard').style.display='block';renderItems();buildMaster();refresh();
     if(res.failures&&res.failures.length){console.warn('Failed instructions:',res.failures,'last raw:',lastRawResponse);
-      toast(items.length+' ready · No. '+res.failures.join(', ')+' need review (raw text kept)');}
+      var f=res.failures;toast(f.length===1?('Instruction '+f[0]+' could not be generated.'):('Instructions '+f.join(', ')+' could not be generated.'));}
     else toast('English ready · '+items.length+' instruction'+(items.length>1?'s':''));
     var sel=coverLangs.filter(function(c){return c!=='en';});
     if(sel.length)await translateLangs(sel,{});
