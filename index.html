@@ -120,6 +120,14 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
 .sw .tk:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .15s var(--ease);box-shadow:0 1px 2px rgba(0,0,0,.2)}
 .sw input:checked+.tk{background:var(--blue)}.sw input:checked+.tk:before{transform:translateX(18px)}
 .item .ih .ctrl button.dx{padding:3px 8px;font-size:13px;line-height:1}
+.lmrow{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:9px;padding:8px 11px;margin-bottom:6px;background:#fff}
+.lmrow .lm-main{flex:1;min-width:0}
+.lmrow .lm-main b{display:block;font-size:13px;color:var(--text)}
+.lmrow .lm-main span{display:block;font-size:11px;color:var(--text2);font-family:var(--font-mono);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lmrow .lm-ax{display:flex;gap:5px;align-items:center;flex:none}
+.lmrow .lm-ax button{border:1px solid var(--line);background:#fff;color:var(--text2);border-radius:7px;font-size:12px;padding:3px 9px;font-weight:600;transition:all .15s var(--ease)}
+.lmrow .lm-ax button:hover{border-color:var(--blue);color:var(--blue)}
+.lmrow .lm-lock{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--text2);background:var(--blue-050);border:1px solid var(--blue-100);border-radius:6px;padding:3px 7px}
 .preview-wrap{position:sticky;top:78px}
 .stage{background:#eef2f7;border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;min-height:150px;background-image:radial-gradient(rgba(36,74,155,.05) 1px,transparent 1px);background-size:14px 14px}
 .stage .empty{color:var(--text2);font-size:13px;align-self:center;text-align:center}
@@ -229,18 +237,8 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
           <div><label class="f">Date &amp; time (ref for “tomorrow”)</label><input class="inp" id="dt" oninput="refresh()"></div>
         </div>
         <label class="f" style="margin-top:13px">Languages on the cover</label>
-        <div class="langpick" id="langpick">
-          <label><input type="checkbox" value="en" onchange="toggleLang()">English</label>
-          <label><input type="checkbox" value="ml" onchange="toggleLang()">Malayalam</label>
-          <label><input type="checkbox" value="hi" onchange="toggleLang()">Hindi</label>
-          <label><input type="checkbox" value="ta" onchange="toggleLang()">Tamil</label>
-          <label><input type="checkbox" value="kn" onchange="toggleLang()">Kannada</label>
-          <label><input type="checkbox" value="te" onchange="toggleLang()">Telugu</label>
-          <label><input type="checkbox" value="bn" onchange="toggleLang()">Bengali</label>
-          <label><input type="checkbox" value="ar" onchange="toggleLang()">Arabic</label>
-          <label><input type="checkbox" value="ru" onchange="toggleLang()">Russian</label>
-        </div>
-        <div class="help" style="margin-top:8px">Every language is independent — untick English to print Malayalam (or any language) only.</div>
+        <div class="langpick" id="langpick"></div>
+        <div class="help" style="margin-top:8px">Every language is independent — untick English to print Malayalam (or any language) only. Add more languages in ⚙ Settings → Language Manager.</div>
         <div class="grid c3" style="margin-top:14px">
           <div><label class="f">Envelope size</label>
             <div class="seg" id="segSize"><button data-v="large" class="on" onclick="setSeg('size','large')">Large</button><button data-v="small" onclick="setSeg('size','small')">Small</button></div></div>
@@ -452,6 +450,39 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
         <label class="sw"><input type="checkbox" id="ecoToggle" onchange="onEconomyToggle()"><span class="tk"></span></label>
       </div>
       <div class="help" style="margin-top:14px">PDF &amp; DOCX export loads small libraries from the web the first time, then works while online.</div>
+      <div style="margin-top:16px;border-top:1px solid var(--line-soft);padding-top:14px">
+        <label class="f" style="font-size:13px;color:var(--text)">Language Manager</label>
+        <div id="langMgrList" style="margin-top:8px;max-height:220px;overflow:auto"></div>
+        <button class="btn outline sm" style="margin-top:8px" onclick="langAddNew()">+ Add language</button>
+        <div id="langForm" style="display:none;margin-top:10px;border:1px solid var(--line);border-radius:9px;padding:11px">
+          <div class="grid c2">
+            <div><label class="f">Display name</label><input class="inp" id="lName" placeholder="Nepali"></div>
+            <div><label class="f">Language code</label><input class="inp" id="lCode" placeholder="ne"></div>
+          </div>
+          <label class="f" style="margin-top:9px">Font family</label>
+          <input class="inp" id="lFont" list="notoFontList" placeholder="Noto Sans Devanagari">
+          <datalist id="notoFontList">
+            <option value="Noto Sans">Latin / Cyrillic / Greek</option>
+            <option value="Noto Sans Devanagari">Hindi · Nepali · Marathi</option>
+            <option value="Noto Sans Gujarati">Gujarati</option>
+            <option value="Noto Sans Gurmukhi">Punjabi</option>
+            <option value="Noto Naskh Arabic">Arabic · Urdu</option>
+            <option value="Noto Sans Sinhala">Sinhala</option>
+            <option value="Noto Sans Tamil">Tamil</option>
+            <option value="Noto Sans Telugu">Telugu</option>
+            <option value="Noto Sans Kannada">Kannada</option>
+            <option value="Noto Sans Bengali">Bengali</option>
+            <option value="Noto Sans Thai">Thai</option>
+          </datalist>
+          <label class="f" style="margin-top:9px">Text direction</label>
+          <div class="seg" id="lDirSeg"><button data-v="ltr" class="on" onclick="setLangDir('ltr')">LTR</button><button data-v="rtl" onclick="setLangDir('rtl')">RTL</button></div>
+          <div style="display:flex;gap:7px;margin-top:10px">
+            <button class="btn primary sm" onclick="langSaveForm()">Save language</button>
+            <button class="btn ghost sm" onclick="langCancelForm()">Cancel</button>
+          </div>
+          <div class="help" style="margin-top:8px">Built-in languages are protected. A new language appears everywhere — selector, translation, preview, print, PDF, DOCX, master output — and is saved for next time. If the font isn't available it falls back to a Unicode font automatically.</div>
+        </div>
+      </div>
       <button class="btn primary block" style="margin-top:16px" onclick="saveSettings();closeSettings();toast('Settings saved')">Save settings</button>
     </div>
   </div>
@@ -464,8 +495,39 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
 <script>
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const LANGS={en:'English',ml:'Malayalam',hi:'Hindi',ta:'Tamil',kn:'Kannada',te:'Telugu',bn:'Bengali',ar:'Arabic',ru:'Russian'};
-const LANG_ORDER=['en','ml','hi','ta','kn','te','bn','ar','ru'];
+/* ===== Dynamic language registry (built-in protected + user custom) ===== */
+const BUILTIN_LANGS=[
+ {code:'en',name:'English',font:'',dir:'ltr'},
+ {code:'ml',name:'Malayalam',font:"'Noto Sans Malayalam'",dir:'ltr'},
+ {code:'hi',name:'Hindi',font:"'Noto Sans Devanagari'",dir:'ltr'},
+ {code:'ta',name:'Tamil',font:"'Noto Sans Tamil'",dir:'ltr'},
+ {code:'kn',name:'Kannada',font:"'Noto Sans Kannada'",dir:'ltr'},
+ {code:'te',name:'Telugu',font:"'Noto Sans Telugu'",dir:'ltr'},
+ {code:'bn',name:'Bengali',font:"'Noto Sans Bengali'",dir:'ltr'},
+ {code:'ar',name:'Arabic',font:"'Noto Naskh Arabic'",dir:'rtl'},
+ {code:'ru',name:'Russian',font:"'Noto Sans'",dir:'ltr'}
+];
+const BUILTIN_CODES=BUILTIN_LANGS.map(function(l){return l.code;});
+const CUSTOM_LANGS_KEY='wcp_langs_custom';
+let customLangs=[];
+let LANGS={},LANG_ORDER=[],LANGMAP={};
+function isBuiltinLang(code){return BUILTIN_CODES.indexOf(code)>=0;}
+function validLangObj(l){return l&&typeof l.code==='string'&&/^[a-z]{2,8}(-[a-z0-9]{2,8})?$/i.test(l.code)&&typeof l.name==='string'&&l.name.trim()&&!isBuiltinLang(l.code.toLowerCase());}
+function loadCustomLangs(){try{var a=JSON.parse(localStorage.getItem(CUSTOM_LANGS_KEY)||'[]');customLangs=Array.isArray(a)?a.filter(validLangObj).map(function(l){return {code:String(l.code).toLowerCase(),name:String(l.name),font:String(l.font||''),dir:(l.dir==='rtl'?'rtl':'ltr')};}):[];}catch(e){customLangs=[];}}
+function saveCustomLangs(){try{localStorage.setItem(CUSTOM_LANGS_KEY,JSON.stringify(customLangs));}catch(e){}}
+function allLangs(){return BUILTIN_LANGS.concat(customLangs);}
+function rebuildLangIndex(){LANGS={};LANG_ORDER=[];LANGMAP={};allLangs().forEach(function(l){LANGS[l.code]=l.name;LANG_ORDER.push(l.code);LANGMAP[l.code]=l;});}
+function langDef(code){return LANGMAP[code]||{code:code,name:code,font:'',dir:'ltr'};}
+/* font stack always ends in a Unicode-capable fallback so missing fonts degrade gracefully */
+function langFontStack(code){var f=(langDef(code).font||'').trim();return (f?f+', ':'')+"'Noto Sans', var(--font-ui)";}
+function langDir(code){return langDef(code).dir==='rtl'?'rtl':'ltr';}
+/* best-effort: pull a named Noto webfont from Google so custom languages render glyphs */
+var loadedFonts={};
+function ensureFont(font){font=String(font||'').replace(/['"]/g,'').trim();
+  if(!font||loadedFonts[font])return;loadedFonts[font]=1;
+  if(!/^Noto\s/i.test(font))return;                       /* only auto-load Noto families */
+  try{var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+font.replace(/\s+/g,'+')+':wght@400;500;600&display=swap';document.head.appendChild(l);}catch(e){}}
+rebuildLangIndex();
 const FIELDLABELS={name:'Patient Name',opd:'OPD Number',instr:'Instructions',no:'Prescription No',date:'Date & Time'};
 const TPLNAMES={large_plain:'Large · Plain',large_box:'Large · Box',small_plain:'Small · Plain',small_box:'Small · Box'};
 const DEFAULT_DICT=[
@@ -507,9 +569,9 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
 function effectiveLayout(key){const d=DEFAULT_LAYOUTS[key];const o=(settings.layouts&&settings.layouts[key])||{};const out={};
   Object.keys(d).forEach(fk=>{out[fk]=(o[fk]&&o[fk].length===4)?o[fk].slice():d[fk].slice();});return out;}
 
-function init(){loadSettings();document.getElementById('todayPill').textContent=nowStr();document.getElementById('dt').value=nowStr();
+function init(){loadSettings();loadCustomLangs();rebuildLangIndex();customLangs.forEach(function(l){ensureFont(l.font);});document.getElementById('todayPill').textContent=nowStr();document.getElementById('dt').value=nowStr();
   document.getElementById('covFont').innerHTML=FONTS.map(f=>'<option value="'+f[0]+'">'+f[1]+'</option>').join('');
-  syncLangpick();applyTypoUI();updateLogoUI();renderTemplates();renderDict();preloadWHLogo();
+  renderLangpick();renderLangManager();syncLangpick();applyTypoUI();updateLogoUI();renderTemplates();renderDict();preloadWHLogo();
   document.getElementById('tplSel').value=form.size+'_'+form.style;renderFieldEditor();refresh();updateTokenPanel();}
 function preloadWHLogo(){var im=new Image();im.onload=function(){WH_LOGO_OK=true;refresh();};im.onerror=function(){WH_LOGO_OK=false;};im.src=WH_LOGO;}
 function openSettings(){document.getElementById('drawer').classList.add('open');}
@@ -553,6 +615,59 @@ function toggleLang(){var prev=coverLangs.slice();coverLangs=[...document.queryS
   if(items.length){var added=coverLangs.filter(function(c){return c!=='en'&&prev.indexOf(c)<0;});if(added.length)translateLangs(added,{});}}
 function syncLangpick(){document.querySelectorAll('#langpick input').forEach(function(c){c.checked=coverLangs.indexOf(c.value)>=0;});
   document.querySelectorAll('#langpick label').forEach(function(l){l.classList.toggle('on',l.querySelector('input').checked);});}
+/* ===== dynamic language selector + Language Manager (#11) ===== */
+function renderLangpick(){var el=document.getElementById('langpick');if(!el)return;
+  el.innerHTML=allLangs().map(function(l){var on=coverLangs.indexOf(l.code)>=0;
+    return '<label class="'+(on?'on':'')+'"><input type="checkbox" value="'+esc(l.code)+'"'+(on?' checked':'')+' onchange="toggleLang()">'+esc(l.name)+'</label>';}).join('');}
+function renderLangManager(){var el=document.getElementById('langMgrList');if(!el)return;
+  el.innerHTML=allLangs().map(function(l){var custom=!isBuiltinLang(l.code);
+    var fontTxt=(l.font||'').replace(/['"]/g,'');var meta=esc(l.code)+' · '+(l.dir==='rtl'?'RTL':'LTR')+(fontTxt?(' · '+esc(fontTxt)):'');
+    var ax=custom?('<button title="Edit" onclick="langEdit(\''+l.code+'\')">\u270E</button><button title="Remove" onclick="langRemove(\''+l.code+'\')">\u00D7</button>')
+                 :'<span class="lm-lock">built-in</span>';
+    return '<div class="lmrow"><div class="lm-main"><b>'+esc(l.name)+'</b><span>'+meta+'</span></div><div class="lm-ax">'+ax+'</div></div>';}).join('');}
+var langEditCode=null,langFormDir='ltr';
+function setLangDir(d){langFormDir=(d==='rtl'?'rtl':'ltr');document.querySelectorAll('#lDirSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.v===langFormDir);});}
+function langShowForm(s){document.getElementById('langForm').style.display=s?'block':'none';}
+function langAddNew(){langEditCode=null;document.getElementById('lName').value='';document.getElementById('lCode').value='';document.getElementById('lFont').value='';setLangDir('ltr');langShowForm(true);}
+function langEdit(code){var l=customLangs.filter(function(x){return x.code===code;})[0];if(!l)return;langEditCode=code;
+  document.getElementById('lName').value=l.name;document.getElementById('lCode').value=l.code;document.getElementById('lFont').value=(l.font||'').replace(/['"]/g,'');setLangDir(l.dir||'ltr');langShowForm(true);}
+function langCancelForm(){langShowForm(false);langEditCode=null;}
+function normalizeFontName(f){f=String(f||'').trim().replace(/^['"]|['"]$/g,'');if(!f)return '';return /\s/.test(f)?("'"+f+"'"):f;}
+function langSaveForm(){
+  var name=document.getElementById('lName').value.trim();
+  var code=document.getElementById('lCode').value.trim().toLowerCase();
+  var font=normalizeFontName(document.getElementById('lFont').value);
+  var dir=langFormDir;
+  if(!name||!code){toast('Enter a name and code');return;}
+  if(!/^[a-z]{2,8}(-[a-z0-9]{2,8})?$/.test(code)){toast('Code should be ISO-style, e.g. ne, gu, pa');return;}
+  if(isBuiltinLang(code)){toast('That code is a protected built-in language');return;}
+  var dupIx=customLangs.map(function(x){return x.code;}).indexOf(code);
+  if(langEditCode){
+    var i=customLangs.map(function(x){return x.code;}).indexOf(langEditCode);
+    if(i<0){toast('Language not found');return;}
+    if(dupIx>=0&&dupIx!==i){toast('That code is already used');return;}
+    customLangs[i]={code:code,name:name,font:font,dir:dir};
+    if(code!==langEditCode){ /* migrate selections + existing translations to the new code */
+      coverLangs=coverLangs.map(function(c){return c===langEditCode?code:c;});
+      items.forEach(function(it){if(it.tr&&it.tr[langEditCode]!=null){it.tr[code]=it.tr[langEditCode];delete it.tr[langEditCode];}});
+    }
+  }else{
+    if(dupIx>=0){toast('That code is already used');return;}
+    customLangs.push({code:code,name:name,font:font,dir:dir});
+  }
+  saveCustomLangs();rebuildLangIndex();ensureFont(font);
+  renderLangManager();renderLangpick();syncLangpick();saveSettings();
+  if(items.length){renderItems();buildMaster();}refresh();updateTokenPanel();
+  langCancelForm();toast('Language saved: '+name);}
+function langRemove(code){
+  if(isBuiltinLang(code)){toast('Built-in languages cannot be removed');return;}
+  if(!confirm('Remove language "'+(LANGMAP[code]?LANGMAP[code].name:code)+'"?'))return;
+  customLangs=customLangs.filter(function(x){return x.code!==code;});
+  coverLangs=coverLangs.filter(function(c){return c!==code;});
+  saveCustomLangs();rebuildLangIndex();saveSettings();
+  renderLangManager();renderLangpick();syncLangpick();
+  if(items.length){renderItems();buildMaster();}refresh();updateTokenPanel();
+  toast('Language removed');}
 
 /* ===== field editor ===== */
 function renderFieldEditor(){
@@ -1001,7 +1116,7 @@ async function translateLangs(langCodes,opts){
 function renderItems(){
   document.getElementById('itemCount').textContent=items.filter(i=>i.on).length+' active';
   document.getElementById('items').innerHTML=items.map((it,idx)=>{
-    const rows=coverLangs.filter(function(c){return c!=='en';}).map(c=>'<div class="lng"><div class="lk">'+LANGS[c]+'</div><textarea class="'+c+'" oninput="editTr('+idx+',\''+c+'\',this.value)">'+esc(it.tr[c]||'')+'</textarea></div>').join('');
+    const rows=coverLangs.filter(function(c){return c!=='en';}).map(c=>'<div class="lng"><div class="lk">'+esc(LANGS[c]||c)+'</div><textarea class="'+c+'" style="font-family:'+langFontStack(c)+';direction:'+langDir(c)+'" oninput="editTr('+idx+',\''+c+'\',this.value)">'+esc(it.tr[c]||'')+'</textarea></div>').join('');
     return '<div class="item '+(it.sos?'sos':'')+' '+(it.on?'':'off')+'">'+
       '<div class="ih"><span class="badge">'+it.n+'</span><span class="sec">'+esc(it.section||(it.sos?'SOS':''))+'</span>'+
         '<div class="ctrl"><button class="dx" title="Move up" onclick="moveItem('+idx+',-1)">↑</button>'+
@@ -1035,7 +1150,7 @@ function instrHTML(it,headTxt,base,ti){base=base||BASEFS[form.size];
   var body='';
   LANG_ORDER.forEach(function(c){if(show.indexOf(c)<0)return;
     if(c==='en'){body+='<div class="ln" style="font-size:'+base.toFixed(3)+'cm"><span class="lk">\u2022 English:</span> <span class="lv">'+(esc(it.en)||'<i style="color:#9aa6b6">No instruction</i>')+'</span></div>';}
-    else if(it.tr[c]){body+='<div class="ln reg '+c+'" style="font-size:'+(base*1.04).toFixed(3)+'cm"><span class="lk">'+LANGS[c]+':</span> <span class="lv">'+esc(it.tr[c])+'</span></div>';}});
+    else if(it.tr[c]){body+='<div class="ln reg '+c+'" style="font-size:'+(base*1.04).toFixed(3)+'cm;font-family:'+langFontStack(c)+';direction:'+langDir(c)+'"><span class="lk">'+esc(LANGS[c]||c)+':</span> <span class="lv">'+esc(it.tr[c])+'</span></div>';}});
   if(!body)body='<div class="ln" style="font-size:'+base.toFixed(3)+'cm"><span class="lv"><i style="color:#9aa6b6">No instruction</i></span></div>';
   var inner=h+body;
   if(ti&&(ti.sx!==1||ti.sy!==1))inner='<div style="transform-origin:left top;transform:scale('+ti.sx+','+ti.sy+')">'+inner+'</div>';
