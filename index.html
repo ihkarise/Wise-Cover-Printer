@@ -7,7 +7,7 @@
 <link rel="icon" href="logo-wcp.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=JetBrains+Mono:wght@500;600&family=Noto+Sans+Malayalam:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Noto+Sans+Tamil:wght@400;500;600&family=Noto+Sans+Kannada:wght@400;500;600&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=JetBrains+Mono:wght@500;600&family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Malayalam:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Noto+Sans+Tamil:wght@400;500;600&family=Noto+Sans+Kannada:wght@400;500;600&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ===== Wise Cover Printer · Wise Ecosystem brand ===== */
 :root{
@@ -93,10 +93,33 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
 .item .ml{font-family:'Noto Sans Malayalam',var(--font-ui)}.item .hi{font-family:'Noto Sans Devanagari',var(--font-ui)}
 .item .ta{font-family:'Noto Sans Tamil',var(--font-ui)}.item .kn{font-family:'Noto Sans Kannada',var(--font-ui)}
 .item .te{font-family:'Noto Sans Telugu',var(--font-ui)}.item .bn{font-family:'Noto Sans Bengali',var(--font-ui)}.item .ar{font-family:'Noto Naskh Arabic',var(--font-ui)}
+.item .ru{font-family:'Noto Sans',var(--font-ui)}
 .item.off{opacity:.42}
 .help{font-size:11.5px;color:var(--text2);background:var(--blue-050);border:1px solid var(--blue-100);border-radius:9px;padding:9px 11px;margin-top:9px;line-height:1.5}
 .help code{background:#fff;padding:1px 5px;border-radius:4px;border:1px solid var(--line);font-size:11px;font-family:var(--font-mono)}
 .notice{font-size:12.5px;border-radius:10px;padding:10px 12px;margin:0 0 14px;display:flex;gap:8px;align-items:flex-start;line-height:1.5;background:var(--blue-050);color:var(--blue-700);border:1px solid var(--blue-100)}.notice b{font-weight:700}
+/* ===== token estimator + recovery (stabilization) ===== */
+.tokpanel{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:12px;background:#fff}
+.tokpanel .tk-head{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--text)}
+.tokpanel .tk-dot{width:11px;height:11px;border-radius:50%;flex:none}
+.tokpanel.green .tk-dot{background:var(--success)}.tokpanel.amber .tk-dot{background:var(--warning)}.tokpanel.red .tk-dot{background:var(--danger)}
+.tokpanel .tk-meta{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--text2)}
+.tokpanel .tk-msg{margin-top:5px;color:var(--text2);line-height:1.45}
+.tokpanel .tk-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.tokpanel .tk-acts button{border:1px solid var(--line);background:#fff;color:var(--blue);border-radius:8px;font-size:11.5px;font-weight:600;padding:6px 10px;transition:all .15s var(--ease)}
+.tokpanel .tk-acts button:hover{border-color:var(--blue);background:var(--blue-050)}
+.tokpanel.hide{display:none}
+.recovery{font-size:12.5px;border-radius:10px;padding:10px 12px;margin:0 0 12px;display:flex;gap:8px;align-items:flex-start;line-height:1.5;background:var(--red-050);color:var(--red-700);border:1px solid #f3c6cf}
+.recovery.hide{display:none}.recovery b{font-weight:700}
+.ecorow{display:flex;align-items:center;gap:10px;margin-top:14px;padding:11px 12px;border:1px solid var(--line);border-radius:10px}
+.ecorow .ec-txt{flex:1;font-size:12.5px;color:var(--text)}
+.ecorow .ec-txt small{display:block;color:var(--text2);font-size:11px;margin-top:2px;line-height:1.4}
+.sw{position:relative;width:42px;height:24px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw .tk{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:background .15s var(--ease)}
+.sw .tk:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .15s var(--ease);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked+.tk{background:var(--blue)}.sw input:checked+.tk:before{transform:translateX(18px)}
+.item .ih .ctrl button.dx{padding:3px 8px;font-size:13px;line-height:1}
 .preview-wrap{position:sticky;top:78px}
 .stage{background:#eef2f7;border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;min-height:150px;background-image:radial-gradient(rgba(36,74,155,.05) 1px,transparent 1px);background-size:14px 14px}
 .stage .empty{color:var(--text2);font-size:13px;align-self:center;text-align:center}
@@ -144,6 +167,7 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
 .cover .instr .ln.ml{font-family:'Noto Sans Malayalam',var(--font-ui)}.cover .instr .ln.hi{font-family:'Noto Sans Devanagari',var(--font-ui)}
 .cover .instr .ln.ta{font-family:'Noto Sans Tamil',var(--font-ui)}.cover .instr .ln.kn{font-family:'Noto Sans Kannada',var(--font-ui)}
 .cover .instr .ln.te{font-family:'Noto Sans Telugu',var(--font-ui)}.cover .instr .ln.bn{font-family:'Noto Sans Bengali',var(--font-ui)}.cover .instr .ln.ar{font-family:'Noto Naskh Arabic',var(--font-ui);direction:rtl}
+.cover .instr .ln.ru{font-family:'Noto Sans',var(--font-ui)}
 .cover .pellets{position:absolute;right:.3cm;bottom:.3cm;display:flex;gap:.08cm}.cover .pellets i{width:.15cm;height:.15cm;border-radius:50%;background:var(--ca,#244A9B);opacity:.5}
 .master{width:100%;min-height:120px;border:1px solid var(--line);border-radius:9px;padding:11px;font-family:var(--font-mono);font-size:12px;line-height:1.55;resize:vertical;background:#fafcfd}
 .drawer{position:fixed;inset:0;background:rgba(19,42,92,.4);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:22px;overflow:auto}
@@ -337,7 +361,7 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
     <div class="card">
       <div class="card-head"><span class="step">2</span><h2>Paste the prescription</h2><span class="hint">rough is fine</span></div>
       <div class="card-body">
-        <textarea class="inp" id="paste" placeholder="15 days
+        <textarea class="inp" id="paste" oninput="updateTokenPanel()" placeholder="15 days
 ------------ 15 days ------------
 1. 1 sachet tomorrow, cut, mix in 3 spoons room temp mineral water
 2. 1 tablet afternoon
@@ -346,15 +370,23 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
 4. SOS fever and cold: 4 pills from no.1, after 10 min 4 from no.2, repeat every 2 hrs
 5. SOS fever: if no.1 & no.2 don't relieve, 1 sachet every 2 hrs up to 4"></textarea>
         <button class="btn primary block lg" id="goBtn" onclick="processRx()" style="margin-top:12px">✦ Elaborate, translate &amp; split into covers</button>
-        <div class="help">One numbered line = one cover. The assistant expands your shorthand into full house-style instructions, fills real dates, translates to the ticked languages, and lays out one cover per item.</div>
+        <button class="btn ghost block sm" id="splitBtn" onclick="splitWithoutAI()" style="margin-top:8px">✂ Split prescription only (no AI)</button>
+        <div class="tokpanel hide" id="tokPanel">
+          <div class="tk-head"><span class="tk-dot"></span><span id="tkLabel">Request size</span><span class="tk-meta" id="tkMeta"></span></div>
+          <div class="tk-msg" id="tkMsg"></div>
+          <div class="tk-acts" id="tkActs"></div>
+        </div>
+        <div class="help">One numbered line = one cover. The assistant expands your shorthand into full house-style instructions, fills real dates, translates to the ticked languages, and lays out one cover per item. <b>Split only</b> skips AI entirely — useful when AI / credits are unavailable.</div>
       </div>
     </div>
 
     <div class="card" id="resultsCard" style="display:none">
       <div class="card-head"><span class="step">3</span><h2>Covers</h2><span class="hint" id="itemCount"></span></div>
       <div class="card-body">
+        <div class="recovery hide" id="recoveryBanner"><span>⚠</span><div id="recoveryMsg"></div></div>
         <div id="trBar" style="display:flex;gap:8px;align-items:center;margin-bottom:11px;flex-wrap:wrap">
           <button class="btn outline sm" id="trBtn" onclick="translateSelectedBtn()">✦ Translate selected languages</button>
+          <button class="btn ghost sm" id="addCoverBtn" onclick="addBlankCover()">➕ Add cover</button>
           <span class="hint" id="trStatus" style="font-size:11.5px;color:var(--text2)"></span>
         </div>
         <div id="items"></div>
@@ -413,6 +445,12 @@ textarea.inp{resize:vertical;line-height:1.5}textarea#paste{min-height:152px;fon
       <div id="engProxy" style="margin-top:13px;display:none">
         <label class="f">Apps Script Web App URL</label><input class="inp" id="proxyUrl" placeholder="https://script.google.com/macros/s/…/exec">
       </div>
+      <div class="ecorow">
+        <div class="ec-txt">Economy Mode
+          <small>Sends only the shorthand actually used, trims examples, and uses the smallest safe token budget. Lower credit use; English quality preserved.</small>
+        </div>
+        <label class="sw"><input type="checkbox" id="ecoToggle" onchange="onEconomyToggle()"><span class="tk"></span></label>
+      </div>
       <div class="help" style="margin-top:14px">PDF &amp; DOCX export loads small libraries from the web the first time, then works while online.</div>
       <button class="btn primary block" style="margin-top:16px" onclick="saveSettings();closeSettings();toast('Settings saved')">Save settings</button>
     </div>
@@ -460,7 +498,7 @@ const BASEFS={large:0.34,small:0.30};
 
 let form={size:'large',style:'plain',stock:'blank'};
 let coverLangs=['en','ml']; let items=[]; let course=''; let dictEditIdx=-1;
-let settings={engine:'openai',baseUrl:'https://openrouter.ai/api/v1',oaKey:'',oaModel:'google/gemini-2.5-flash',anKey:'',anModel:'claude-sonnet-4-6',proxyUrl:'',offX:0,offY:0,rot:'90',layouts:{},inkColor:'#1E293B',accentColor:'#244A9B',typo:{global:{font:"'Inter',sans-serif",size:1,sx:1,sy:1},fields:{}},dict:[],logo:{show:true,dataUrl:''},langs:['en','ml']};
+let settings={engine:'openai',baseUrl:'https://openrouter.ai/api/v1',oaKey:'',oaModel:'google/gemini-2.5-flash',anKey:'',anModel:'claude-sonnet-4-6',proxyUrl:'',offX:0,offY:0,rot:'90',layouts:{},inkColor:'#1E293B',accentColor:'#244A9B',typo:{global:{font:"'Inter',sans-serif",size:1,sx:1,sy:1},fields:{}},dict:[],logo:{show:true,dataUrl:''},langs:['en','ml'],economy:false};
 
 function p2(n){return String(n).padStart(2,'0');}
 function nowStr(){const d=new Date();let h=d.getHours();const ap=h>=12?'PM':'AM';h=h%12||12;return p2(d.getDate())+'-'+MON3[d.getMonth()]+'-'+d.getFullYear()+' '+p2(h)+':'+p2(d.getMinutes())+' '+ap;}
@@ -472,10 +510,11 @@ function effectiveLayout(key){const d=DEFAULT_LAYOUTS[key];const o=(settings.lay
 function init(){loadSettings();document.getElementById('todayPill').textContent=nowStr();document.getElementById('dt').value=nowStr();
   document.getElementById('covFont').innerHTML=FONTS.map(f=>'<option value="'+f[0]+'">'+f[1]+'</option>').join('');
   syncLangpick();applyTypoUI();updateLogoUI();renderTemplates();renderDict();preloadWHLogo();
-  document.getElementById('tplSel').value=form.size+'_'+form.style;renderFieldEditor();refresh();}
+  document.getElementById('tplSel').value=form.size+'_'+form.style;renderFieldEditor();refresh();updateTokenPanel();}
 function preloadWHLogo(){var im=new Image();im.onload=function(){WH_LOGO_OK=true;refresh();};im.onerror=function(){WH_LOGO_OK=false;};im.src=WH_LOGO;}
 function openSettings(){document.getElementById('drawer').classList.add('open');}
 function closeSettings(){document.getElementById('drawer').classList.remove('open');}
+function onEconomyToggle(){settings.economy=!!document.getElementById('ecoToggle').checked;saveSettings();updateTokenPanel();toast(settings.economy?'Economy Mode on':'Economy Mode off');}
 function setEngine(v){settings.engine=v;document.querySelectorAll('#segEngine button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   document.getElementById('engOpenai').style.display=v==='openai'?'block':'none';document.getElementById('engAnthropic').style.display=v==='anthropic'?'block':'none';document.getElementById('engProxy').style.display=v==='proxy'?'block':'none';}
 function loadSettings(){var raw={};try{raw=JSON.parse(localStorage.getItem('wcp5')||'{}');}catch(e){}Object.assign(settings,raw);if(!settings.layouts)settings.layouts={};
@@ -486,6 +525,7 @@ function loadSettings(){var raw={};try{raw=JSON.parse(localStorage.getItem('wcp5
   if(!settings.typo.fields)settings.typo.fields={};
   if(!settings.dict||!settings.dict.length)settings.dict=JSON.parse(JSON.stringify(DEFAULT_DICT));
   if(!settings.logo)settings.logo={show:true,dataUrl:''};if(typeof settings.logo.show==='undefined')settings.logo.show=true;
+  if(typeof settings.economy==='undefined')settings.economy=false;var ecoEl=document.getElementById('ecoToggle');if(ecoEl)ecoEl.checked=!!settings.economy;
   coverLangs=(settings.langs&&settings.langs.length)?settings.langs.slice():['en','ml'];
   document.getElementById('baseUrl').value=settings.baseUrl;document.getElementById('oaKey').value=settings.oaKey;document.getElementById('oaModel').value=settings.oaModel;
   document.getElementById('anKey').value=settings.anKey;document.getElementById('anModel').value=settings.anModel;document.getElementById('proxyUrl').value=settings.proxyUrl;
@@ -509,7 +549,7 @@ function nudge(key,d){settings[key]=Math.round(((parseFloat(document.getElementB
 function onNudge(){settings.offX=parseFloat(document.getElementById('offX').value)||0;settings.offY=parseFloat(document.getElementById('offY').value)||0;saveSettings();refresh();}
 function toggleLang(){var prev=coverLangs.slice();coverLangs=[...document.querySelectorAll('#langpick input:checked')].map(c=>c.value);
   document.querySelectorAll('#langpick label').forEach(l=>l.classList.toggle('on',l.querySelector('input').checked));
-  saveSettings();if(items.length)renderItems();buildMaster();refresh();
+  saveSettings();if(items.length)renderItems();buildMaster();refresh();updateTokenPanel();
   if(items.length){var added=coverLangs.filter(function(c){return c!=='en'&&prev.indexOf(c)<0;});if(added.length)translateLangs(added,{});}}
 function syncLangpick(){document.querySelectorAll('#langpick input').forEach(function(c){c.checked=coverLangs.indexOf(c.value)>=0;});
   document.querySelectorAll('#langpick label').forEach(function(l){l.classList.toggle('on',l.querySelector('input').checked);});}
@@ -668,7 +708,19 @@ function parsePrescription(text){
 
 /* ===== Step 3 — one concise per-instruction prompt (AI writes English only) ===== */
 function buildSystemENItem(used){
-  var lines=[
+  var lines;
+  if(settings.economy){
+    /* Economy: keep the full instruction-quality directives, drop two of the three examples. */
+    lines=[
+"You are the prescription assistant for Wise Homeopathy, a homeopathy dispensary in Kerala, India.",
+"Rewrite the one rough shorthand medicine instruction the user gives you as a single clear, complete, patient-friendly English instruction.",
+"Resolve any relative date (today / tonight / tomorrow / day after / 'day N' / 'X day course') from the REFERENCE DATE and write the real date in brackets, e.g. (June 17). Keep all numbers, dosages, medicine numbers (No.1, No.2) and timings exactly. Use the glossary wording when relevant.",
+"Example:",
+"  '1 sachet tomorrow, mix 3 spoons mineral water' -> Take one sachet tomorrow (June 17). For each dose, cut the sachet, mix the contents with 3 spoons of room temperature mineral water, and take it.",
+"Reply with ONLY the rewritten English sentence(s) as plain text. No numbering, no labels, no JSON, no commentary."
+    ];
+  }else{
+    lines=[
 "You are the prescription assistant for Wise Homeopathy, a homeopathy dispensary in Kerala, India.",
 "Rewrite the one rough shorthand medicine instruction the user gives you as a single clear, complete, patient-friendly English instruction.",
 "Resolve any relative date (today / tonight / tomorrow / day after / 'day N' / 'X day course') from the REFERENCE DATE and write the real date in brackets, e.g. (June 17). Keep all numbers, dosages, medicine numbers (No.1, No.2) and timings exactly. Use the glossary wording when relevant.",
@@ -677,7 +729,8 @@ function buildSystemENItem(used){
 "  '4-0-0-4 pills' -> Take 4 pills in the morning and 4 pills at night (4-0-0-4).",
 "  'sos fever 4 pills no.1 after 10min no.2 repeat 2 hrly' -> As needed (SOS) for fever: Take 4 pills from Medicine No. 1, and after 10 minutes take 4 pills from Medicine No. 2. Repeat this alternating process every 2 hours.",
 "Reply with ONLY the rewritten English sentence(s) as plain text. No numbering, no labels, no JSON, no commentary."
-  ];
+    ];
+  }
   var gl=(used||[]).map(function(s){return '  '+s.code+' = '+s.meaning;}).join("\n");
   if(gl)lines.push("","Glossary:",gl);
   return lines.join("\n");
@@ -709,24 +762,59 @@ var TRCACHE_KEY='wcp_trcache';
 function loadTrCache(){try{return JSON.parse(localStorage.getItem(TRCACHE_KEY)||'{}');}catch(e){return {};}}
 function saveTrCache(c){try{var keys=Object.keys(c);if(keys.length>5000){var keep=keys.slice(keys.length-3000);var nc={};keep.forEach(function(k){nc[k]=c[k];});c=nc;}localStorage.setItem(TRCACHE_KEY,JSON.stringify(c));}catch(e){}}
 function trCacheKey(lang,en){return lang+'\u0001'+String(en||'').trim();}
-async function callOpenAI(sys,usr){const url=settings.baseUrl.replace(/\/$/,'')+'/chat/completions';
+
+/* ===== token estimation + adaptive budget (stabilization) ===== */
+function estTokens(s){s=String(s||'');var nonAscii=(s.match(/[^\x00-\x7F]/g)||[]).length;return Math.ceil((s.length+nonAscii*1.4)/4);}
+function clampTokens(n){return Math.max(256,Math.min(2500,Math.round(n||0)));}
+/* expected OUTPUT budget for one request given prompt size + job kind */
+function outputBudget(sys,usr,kind){
+  var inTok=estTokens(sys)+estTokens(usr);
+  var mult=kind==='translate'?1.7:1.4;
+  var base=Math.ceil(inTok*mult)+128;
+  if(settings.economy)base=Math.ceil(base*0.66);
+  return clampTokens(base);
+}
+/* OpenRouter / providers signal "out of credits / context too long" in many ways */
+function isCreditError(msg){msg=String(msg||'').toLowerCase();
+  return /requires more credits|insufficient|payment required|\b402\b|quota|out of credit|credit|too many tokens|max[_ ]?tokens|maximum context|context length|context_length|token limit/.test(msg);}
+var TOKEN_LADDER=[1200,900,700,500,350];
+
+async function callOpenAI(sys,usr,maxTok){const url=settings.baseUrl.replace(/\/$/,'')+'/chat/completions';
   const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+settings.oaKey,'HTTP-Referer':location.origin,'X-Title':'Wise Cover Printer'},
-    body:JSON.stringify({model:settings.oaModel,temperature:0.2,max_tokens:3000,messages:[{role:'system',content:sys},{role:'user',content:usr}]})});
-  if(!r.ok)throw new Error('API '+r.status+': '+(await r.text()).slice(0,160));const d=await r.json();
+    body:JSON.stringify({model:settings.oaModel,temperature:0.2,max_tokens:clampTokens(maxTok||1200),messages:[{role:'system',content:sys},{role:'user',content:usr}]})});
+  if(!r.ok){var t=(await r.text()).slice(0,200);throw new Error('API '+r.status+': '+t);}const d=await r.json();
+  if(d&&d.error)throw new Error(d.error.message||JSON.stringify(d.error));
   return d.choices&&d.choices[0]&&d.choices[0].message?d.choices[0].message.content:'';}
-async function callAnthropic(sys,usr){const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+async function callAnthropic(sys,usr,maxTok){const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
     headers:{'content-type':'application/json','x-api-key':settings.anKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:settings.anModel,max_tokens:3000,system:sys,messages:[{role:'user',content:usr}]})});
-  if(!r.ok)throw new Error('API '+r.status+': '+(await r.text()).slice(0,160));const d=await r.json();
+    body:JSON.stringify({model:settings.anModel,max_tokens:clampTokens(maxTok||1200),system:sys,messages:[{role:'user',content:usr}]})});
+  if(!r.ok){var t=(await r.text()).slice(0,200);throw new Error('API '+r.status+': '+t);}const d=await r.json();
+  if(d&&d.error)throw new Error((d.error.message)||JSON.stringify(d.error));
   return (d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');}
-async function callProxy(sys,usr){const r=await fetch(settings.proxyUrl,{method:'POST',headers:{'content-type':'text/plain;charset=utf-8'},
-    body:JSON.stringify({action:'translate',system:sys,user:usr,model:settings.oaModel})});
-  if(!r.ok)throw new Error('Proxy '+r.status);const d=await r.json();return typeof d==='string'?d:(d.text||d.result||JSON.stringify(d));}
+async function callProxy(sys,usr,maxTok){const r=await fetch(settings.proxyUrl,{method:'POST',headers:{'content-type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action:'translate',system:sys,user:usr,model:settings.oaModel,max_tokens:clampTokens(maxTok||1200)})});
+  if(!r.ok)throw new Error('Proxy '+r.status);const d=await r.json();
+  if(d&&d.error)throw new Error(typeof d.error==='string'?d.error:JSON.stringify(d.error));
+  return typeof d==='string'?d:(d.text||d.result||'');}
 function parseJSONObject(text){let t=String(text||'').trim().replace(/^```(json)?/i,'').replace(/```$/,'').trim();
   const s=t.indexOf('{'),e=t.lastIndexOf('}');if(s>-1&&e>-1)t=t.slice(s,e+1);return JSON.parse(t);}
 function engineReady(){if(settings.engine==='openai')return !!settings.oaKey;if(settings.engine==='anthropic')return !!settings.anKey;return !!settings.proxyUrl;}
-async function callEngine(sys,usr){
-  return settings.engine==='anthropic'?await callAnthropic(sys,usr):settings.engine==='proxy'?await callProxy(sys,usr):await callOpenAI(sys,usr);}
+async function callEngineOnce(sys,usr,maxTok){
+  return settings.engine==='anthropic'?await callAnthropic(sys,usr,maxTok):settings.engine==='proxy'?await callProxy(sys,usr,maxTok):await callOpenAI(sys,usr,maxTok);}
+/* Adaptive entry point: computes a dynamic budget, then on a credit/token error
+   retries the SAME request with a smaller max_tokens, descending the ladder. */
+async function callEngine(sys,usr,kind){
+  var want=outputBudget(sys,usr,kind);
+  var seen={},steps=[];
+  [want].concat(TOKEN_LADDER).forEach(function(x){x=clampTokens(x);if(x<=want&&!seen[x]){seen[x]=1;steps.push(x);}});
+  if(!steps.length)steps=[clampTokens(want)];
+  var lastErr=null;
+  for(var i=0;i<steps.length;i++){
+    try{return await callEngineOnce(sys,usr,steps[i]);}
+    catch(e){lastErr=e;if(isCreditError(e&&e.message)&&i<steps.length-1)continue;throw e;}
+  }
+  throw lastErr||new Error('request failed');
+}
 
 /* ===== generic concurrency pool — runs `tasks` with at most `limit` in flight ===== */
 async function runPool(tasks,limit){
@@ -750,7 +838,7 @@ async function generateItemEnglish(it){
   for(var attempt=0;attempt<=MAX_ITEM_RETRIES;attempt++){   /* one try, then one retry */
     try{
       var strict=attempt>0?"\n\nRespond with ONLY the final English instruction as plain text.":"";
-      var raw=await callEngine(sys+strict,usr);lastRawResponse=raw;window.__wcpLastRaw=raw;
+      var raw=await callEngine(sys+strict,usr,'english');lastRawResponse=raw;window.__wcpLastRaw=raw;
       var en=extractEnglish(raw);
       if(en){enCache[key]=en;return {ok:true,en:en,cached:false};}
       lastErr=new Error('empty response');
@@ -772,22 +860,81 @@ async function generateEnglish(text){
   await runPool(tasks,MAX_PARALLEL_REQUESTS);
   return {course:parsed.course,items:its,failures:failures};
 }
+/* ===== friendly errors + Manual Cover Recovery + AI-free split (stabilization) ===== */
+function friendlyErr(err){var m=String((err&&err.message)||err||'').toLowerCase();
+  if(isCreditError(m))return 'The AI provider reported insufficient credits for this request.';
+  if(/failed to fetch|networkerror|network error|load failed|err_/.test(m))return 'Network error — could not reach the AI provider.';
+  if(/\b401\b|unauthor|invalid api key|no auth/.test(m))return 'The API key was rejected — check it in Settings.';
+  if(/\b403\b/.test(m))return 'The AI provider refused the request (403).';
+  if(/\b429\b|rate/.test(m))return 'The AI provider is rate-limiting requests — try again shortly.';
+  if(/timeout|timed out/.test(m))return 'The AI request timed out.';
+  if(/json|parse|unexpected token/.test(m))return 'The AI returned an unreadable response.';
+  return (err&&err.message)?err.message:'Something went wrong.';}
+function showRecovery(msg){var b=document.getElementById('recoveryBanner'),m=document.getElementById('recoveryMsg');
+  if(!b)return;if(msg){m.innerHTML=msg;b.classList.remove('hide');}else{b.classList.add('hide');}}
+function resequenceItems(){items.forEach(function(it,i){it.n=i+1;});}
+/* build items[] straight from the deterministic parser; useRaw => english = original text */
+function itemsFromParsed(parsed,useRaw){
+  return (parsed.items||[]).map(function(o){
+    return {n:o.n,section:String(o.section||'').toUpperCase(),sos:!!o.sos,
+            en:String(useRaw?(o.text||''):(o.en||o.text||'')).trim(),tr:{},on:true,style:form.style};});}
+/* Emergency mode #6 — no AI at all: pure-JS split into editable covers. */
+function splitWithoutAI(){
+  var text=document.getElementById('paste').value.trim();
+  if(!text){toast('Paste a prescription first');return;}
+  var parsed=parsePrescription(text);
+  if(!parsed.items.length){toast('No instructions found to split');return;}
+  course=parsed.course||'';items=itemsFromParsed(parsed,true);resequenceItems();
+  document.getElementById('resultsCard').style.display='block';
+  showRecovery('<b>Split-only mode.</b> Covers were created directly from your text with no AI. Edit any line, then print / export. Tick languages and press <b>Translate</b> when AI is available.');
+  renderItems();buildMaster();refresh();
+  toast('Split into '+items.length+' cover'+(items.length>1?'s':'')+' (no AI)');}
+/* #7 — manual cover creation + delete / duplicate / reorder */
+function addBlankCover(){
+  items.push({n:items.length+1,section:'',sos:false,en:'',tr:{},on:true,style:form.style});resequenceItems();
+  document.getElementById('resultsCard').style.display='block';
+  renderItems();buildMaster();refresh();toast('Blank cover added');}
+function deleteItem(i){if(!items[i])return;if(!confirm('Delete cover '+items[i].n+'?'))return;
+  items.splice(i,1);resequenceItems();renderItems();buildMaster();refresh();toast('Cover deleted');}
+function duplicateItem(i){if(!items[i])return;var c=JSON.parse(JSON.stringify(items[i]));
+  items.splice(i+1,0,c);resequenceItems();renderItems();buildMaster();refresh();toast('Cover duplicated');}
+function moveItem(i,dir){var j=i+dir;if(j<0||j>=items.length)return;var t=items[i];items[i]=items[j];items[j]=t;
+  resequenceItems();renderItems();buildMaster();refresh();}
+
 async function processRx(){
   if(!document.getElementById('paste').value.trim()){toast('Paste a prescription first');return;}
   if(!engineReady()){openSettings();toast('Add your API key in Settings first');return;}
   const btn=document.getElementById('goBtn');const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='Working…';
+  showRecovery('');
   try{
     var text=document.getElementById('paste').value.trim();
     var res=await generateEnglish(text);course=res.course||'';
     items=res.items.map(function(o){return {n:o.n,section:String(o.section||'').toUpperCase(),sos:!!o.sos,en:String(o.en||'').trim(),tr:{},on:true,style:form.style};});
-    if(!items.length)throw new Error('no instructions found in the pasted text');
+    if(!items.length)throw new Error('No numbered instructions found. Add a line like "1. ..." or use Split prescription only.');
     document.getElementById('resultsCard').style.display='block';renderItems();buildMaster();refresh();
-    if(res.failures&&res.failures.length){console.warn('Failed instructions:',res.failures,'last raw:',lastRawResponse);
-      var f=res.failures;toast(f.length===1?('Instruction '+f[0]+' could not be generated.'):('Instructions '+f.join(', ')+' could not be generated.'));}
-    else toast('English ready · '+items.length+' instruction'+(items.length>1?'s':''));
+    var failed=(res.failures&&res.failures.length)?res.failures.length:0;
+    if(failed&&failed===items.length){
+      /* total AI outage — fall into Manual Cover Recovery Mode, skip translation */
+      showRecovery('<b>Manual Cover Recovery Mode.</b> AI was unavailable, so covers were built from your original text. They are fully editable and printable. Press <b>Elaborate</b> again or <b>Translate</b> once AI / credits return.');
+      toast('AI unavailable — '+items.length+' editable cover'+(items.length>1?'s':'')+' created from your text');
+      return;
+    }
+    if(failed){
+      showRecovery('<b>Partial recovery.</b> '+failed+' instruction'+(failed>1?'s':'')+' kept the original wording because AI could not rewrite '+(failed>1?'them':'it')+'. Edit directly if needed.');
+      var f=res.failures;toast('Instruction'+(f.length>1?'s':'')+' '+f.join(', ')+' kept as-is.');
+    } else toast('English ready · '+items.length+' instruction'+(items.length>1?'s':''));
     var sel=coverLangs.filter(function(c){return c!=='en';});
     if(sel.length)await translateLangs(sel,{});
-  }catch(err){console.error(err);console.warn('Last raw AI response:',lastRawResponse);toast('Failed — '+(err.message||'check key / model / connection'));}
+  }catch(err){
+    console.error(err);console.warn('Last raw AI response:',lastRawResponse);
+    /* never lose work: salvage by splitting locally so editable covers still appear */
+    var t2=document.getElementById('paste').value.trim();var parsed=t2?parsePrescription(t2):{items:[]};
+    if(parsed.items.length){course=parsed.course||'';items=itemsFromParsed(parsed,true);resequenceItems();
+      document.getElementById('resultsCard').style.display='block';renderItems();buildMaster();refresh();
+      showRecovery('<b>Manual Cover Recovery Mode.</b> '+friendlyErr(err)+' Covers were built from your original text and are fully editable.');
+      toast('Recovered — covers built from your text');}
+    else toast('Failed — '+friendlyErr(err));
+  }
   finally{btn.disabled=false;btn.innerHTML=old;}}
 
 /* ===== Stage 2 — on-demand translation (cache + batch + retry) ===== */
@@ -803,7 +950,7 @@ async function translateBatch(lang,list,cache,strict){
     var sys=buildTranslateSystem(lang)+(strict?"\n\nOutput MUST be exactly one valid JSON object. No markdown, no commentary.":"");
     var payload=list.map(function(o,i){return {i:i,en:o.en};});
     var usr="Translate each English instruction into "+LANGS[lang]+" ("+lang+"). Keep all dates, numbers, dosages, medicine numbers (No.1, No.2) and timings exactly as in the English.\nReturn ONLY JSON in this shape: {\"t\":[{\"i\":0,\"x\":\"<translation>\"}]}\n\nITEMS:\n"+JSON.stringify(payload);
-    var raw=await callEngine(sys,usr);lastRawResponse=raw;window.__wcpLastRaw=raw;
+    var raw=await callEngine(sys,usr,'translate');lastRawResponse=raw;window.__wcpLastRaw=raw;
     var obj=null;try{obj=parseJSONObject(raw);}catch(e){obj=null;}
     var arr=obj&&(obj.t||obj.items||obj.translations);
     if(!Array.isArray(arr))return false;
@@ -847,7 +994,7 @@ async function translateLangs(langCodes,opts){
     setTrStatus(anyFail?'Some translations failed — tap Translate to retry':'');
     if(anyFail){console.warn('Last raw AI response:',lastRawResponse);toast('Some translations failed — tap Translate to retry');}
     else toast('Translation complete');
-  }catch(err){console.error(err);console.warn('Last raw AI response:',lastRawResponse);setTrStatus('Translation error — tap Translate to retry');toast('Translation failed — '+(err.message||'check key / connection'));}
+  }catch(err){console.error(err);console.warn('Last raw AI response:',lastRawResponse);setTrStatus('Translation error — tap Translate to retry');toast('Translation failed — '+friendlyErr(err));}
   finally{translating=false;if(trBtn)trBtn.disabled=false;}
 }
 
@@ -857,7 +1004,11 @@ function renderItems(){
     const rows=coverLangs.filter(function(c){return c!=='en';}).map(c=>'<div class="lng"><div class="lk">'+LANGS[c]+'</div><textarea class="'+c+'" oninput="editTr('+idx+',\''+c+'\',this.value)">'+esc(it.tr[c]||'')+'</textarea></div>').join('');
     return '<div class="item '+(it.sos?'sos':'')+' '+(it.on?'':'off')+'">'+
       '<div class="ih"><span class="badge">'+it.n+'</span><span class="sec">'+esc(it.section||(it.sos?'SOS':''))+'</span>'+
-        '<div class="ctrl"><button class="'+(it.style==='box'?'act':'')+'" onclick="toggleStyle('+idx+')">'+(it.style==='box'?'Box':'Plain')+'</button>'+
+        '<div class="ctrl"><button class="dx" title="Move up" onclick="moveItem('+idx+',-1)">↑</button>'+
+          '<button class="dx" title="Move down" onclick="moveItem('+idx+',1)">↓</button>'+
+          '<button class="dx" title="Duplicate" onclick="duplicateItem('+idx+')">⧉</button>'+
+          '<button class="dx" title="Delete" onclick="deleteItem('+idx+')">✕</button>'+
+          '<button class="'+(it.style==='box'?'act':'')+'" onclick="toggleStyle('+idx+')">'+(it.style==='box'?'Box':'Plain')+'</button>'+
           '<button class="'+(it.on?'act':'')+'" onclick="toggleItem('+idx+')">'+(it.on?'On':'Off')+'</button></div></div>'+
       '<div class="lng"><div class="lk">English</div><textarea oninput="editEn('+idx+',this.value)">'+esc(it.en)+'</textarea></div>'+rows+'</div>';
   }).join('');}
@@ -1016,6 +1167,46 @@ async function buildDocx(canvases,pwCm,phCm){
   canvases.forEach((c,i)=>{zip.file('word/media/image'+(i+1)+'.png',c.toDataURL('image/png').split(',')[1],{base64:true});});
   return await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
 }
+/* ===== AI credit protection — request-size estimator + warning panel (stabilization) ===== */
+function updateTokenPanel(){
+  var panel=document.getElementById('tokPanel');if(!panel)return;
+  var text=(document.getElementById('paste').value||'').trim();
+  if(!text){panel.className='tokpanel hide';return;}
+  var parsed=parsePrescription(text);var its=parsed.items;
+  var lab=document.getElementById('tkLabel'),meta=document.getElementById('tkMeta'),msg=document.getElementById('tkMsg'),acts=document.getElementById('tkActs');
+  if(!its.length){panel.className='tokpanel amber';lab.textContent='No numbered instructions';meta.textContent='';
+    msg.textContent='Add lines like "1. ..." so each becomes a cover, or use Split prescription only.';acts.innerHTML='';return;}
+  var enMax=0;
+  its.forEach(function(it){enMax=Math.max(enMax,outputBudget(buildSystemENItem(usedDictFor(it.text)),buildUserENItem(it),'english'));});
+  var langs=coverLangs.filter(function(c){return c&&c!=='en'&&LANGS[c];});
+  var trMax=0;
+  if(langs.length){var batch=its.slice(0,TR_PER_BATCH).map(function(it,i){return {i:i,en:(it.text||'')};});
+    langs.forEach(function(lang){var usr="Translate each English instruction into "+LANGS[lang]+" ("+lang+")."+JSON.stringify(batch);
+      trMax=Math.max(trMax,outputBudget(buildTranslateSystem(lang),usr,'translate'));});}
+  var estMax=Math.max(enMax,trMax);
+  var nReq=its.length+langs.length*Math.ceil(its.length/TR_PER_BATCH);
+  var cls,label;
+  if(estMax<=800){cls='green';label='🟢 Small';}else if(estMax<=1600){cls='amber';label='🟡 Medium';}else{cls='red';label='🔴 Large';}
+  panel.className='tokpanel '+cls;
+  lab.textContent=label+' request';
+  meta.textContent='~'+estMax+' max tok/req · '+nReq+' request'+(nReq>1?'s':'')+(settings.economy?' · economy':'');
+  var m=its.length+' cover'+(its.length>1?'s':'')+(langs.length?(' · '+langs.length+' language'+(langs.length>1?'s':'')):' · English only')+'. Each request is budgeted dynamically and capped at 2500 tokens; on a credit error it auto-retries smaller.';
+  if(cls!=='green')m+=' Large runs are the most likely to exhaust a low credit balance.';
+  msg.textContent=m;
+  var html='';
+  if(cls!=='green'){
+    if(langs.length&&its.length>1)html+='<button onclick="tokSplitAuto()">Split automatically</button>';
+    if(langs.length)html+='<button onclick="tokEnglishOnly()">English only</button>';
+    if(!settings.economy)html+='<button onclick="tokEconomy()">Economy mode</button>';
+    html+='<button onclick="tokContinue()">Continue anyway</button>';
+  }
+  acts.innerHTML=html;
+}
+function tokSplitAuto(){TR_PER_BATCH=Math.max(3,Math.floor(TR_PER_BATCH/2));updateTokenPanel();toast('Auto-split: translation batches of '+TR_PER_BATCH);}
+function tokEnglishOnly(){coverLangs=['en'];syncLangpick();saveSettings();if(items.length){renderItems();buildMaster();}refresh();updateTokenPanel();toast('English only');}
+function tokEconomy(){var e=document.getElementById('ecoToggle');if(e&&!settings.economy){e.checked=true;onEconomyToggle();}else{updateTokenPanel();toast('Economy Mode already on');}}
+function tokContinue(){document.getElementById('tkActs').innerHTML='';toast('Continuing at current size');}
+
 init();
 </script>
 </body>
